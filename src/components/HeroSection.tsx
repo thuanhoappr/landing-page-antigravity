@@ -29,7 +29,7 @@ export default function HeroSection() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8"
         >
           <Trophy className="w-4 h-4 text-brand" />
-          <span>Hướng dẫn Thực chiến Pickleball cùng Coach PPR (USA)</span>
+          <span>Hướng dẫn Thực chiến Pickleball cho Người bận rộn</span>
         </motion.div>
 
         <motion.h1
@@ -38,7 +38,7 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase tracking-tight text-white mb-6 leading-[1.2] max-w-4xl drop-shadow-lg"
         >
-          Muốn tập luyện, chơi Pickleball nhưng bận rộn, chưa có thời gian ra sân tập luyện? <br className="hidden md:block" /><span className="block mt-4 text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">Làm chủ kiến thức tập luyện cơ bản Pickleball chỉ sau vài buổi!</span>
+          Pickleball cho Người Nhập Môn <br className="hidden md:block" /><span className="block mt-4 text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">Dành cho người bận rộn</span>
         </motion.h1>
 
         <motion.p
@@ -47,7 +47,7 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-xl md:text-2xl text-slate-300 mb-10 max-w-3xl font-medium drop-shadow-md"
         >
-          Khóa học "Nhập Môn Tốc Độ" thiết kế riêng cho người đi làm. Tập đúng kỹ thuật ngay từ đầu - Tránh chấn thương - Tự tin ra sân giao lưu cùng đồng nghiệp, bạn bè.
+          Không muốn đứng trên sân kiểu mò mẫm. Học online trước để ra sân với Coach không còn là buổi “lý thuyết kéo dài”, mà là buổi bạn đánh bóng có mục đích rõ ràng.
         </motion.p>
 
         <motion.div
@@ -61,7 +61,7 @@ export default function HeroSection() {
             className="group relative inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 text-base font-black italic uppercase text-white bg-accent rounded-lg overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_8px_rgba(255,77,0,0.4)] focus:outline-none border-b-4 border-accent-hover"
           >
             <span className="relative z-10 flex items-center gap-2">
-              TẬP THỬ MIỄN PHÍ
+              NHẬN LỘ TRÌNH 4 TUẦN
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </span>
           </button>
@@ -70,7 +70,7 @@ export default function HeroSection() {
             onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
             className="w-full sm:w-auto px-5 py-3 text-base font-bold italic uppercase text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm border border-white/20 transition-colors focus:outline-none"
           >
-            Xem Giáo trình Tập Online
+            Xem Giáo trình Thực Chiến
           </button>
         </motion.div>
         

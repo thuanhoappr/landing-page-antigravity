@@ -95,10 +95,10 @@ export default function LeadForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase text-white mb-4">
-                Đừng Trì Hoãn Nữa, <span className="text-brand">Sân Chơi</span> Đang Chờ Bạn!
+                Thấy khác hẳn ngay từ <span className="text-brand">rally đầu tiên</span>
               </h2>
               <p className="text-slate-400 mb-8">
-                ĐĂNG KÝ NGAY HÔM NAY: Nhận ngay 1 buổi Tập Thử Miễn Phí (có sẵn vợt) được thiết kế dành riêng cho người bận rộn.
+                Để lại thông tin. Mình gửi bạn lộ trình 4 tuần và bộ checklist “bỏ túi” trước khi gặp Coach — đỡ phí buổi tập, đỡ phí công sức bạn bỏ ra cho môn này.
               </p>
               
               <div className="space-y-4">
@@ -106,19 +106,19 @@ export default function LeadForm() {
                   <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
                     <span className="text-brand font-bold">1</span>
                   </div>
-                  <p>Tập thử miễn phí (có vợt sẵn)</p>
+                  <p>Lộ trình 4 tuần thực chiến</p>
                 </div>
                 <div className="flex items-center gap-4 text-slate-300">
                   <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
                     <span className="text-brand font-bold">2</span>
                   </div>
-                  <p>Giáo trình tối ưu cho người bận rộn</p>
+                  <p>Checklist "bỏ túi" sửa lỗi trên sân</p>
                 </div>
                 <div className="flex items-center gap-4 text-slate-300">
                   <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
                     <span className="text-brand font-bold">3</span>
                   </div>
-                  <p>Biết đánh ngay sau vài buổi</p>
+                  <p>Cảm giác kiểm soát, ít lỗi ngớ ngẩn</p>
                 </div>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function LeadForm() {
                     </div>
                   ) : (
                     <>
-                      MUA KHÓA HỌC ƯU ĐÃI 99K
+                      ĐĂNG KÝ NGAY HÔM NAY
                       <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </>
                   )}
@@ -228,7 +228,7 @@ export default function LeadForm() {
                     </div>
                   ) : (
                     <>
-                      TẬP THỬ MIỄN PHÍ
+                      NHẬN LỘ TRÌNH VÀ CHECKLIST
                       <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </>
                   )}

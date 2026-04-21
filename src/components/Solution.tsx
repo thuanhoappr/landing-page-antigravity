@@ -51,18 +51,18 @@ export default function Solution() {
             className="w-full lg:w-1/2"
           >
             <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black italic uppercase text-white mb-6 leading-tight tracking-tight lg:whitespace-nowrap xl:whitespace-nowrap">
-              Khóa Học <span className="text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">"Nhập Môn Tốc Độ"</span>
+              Bạn nhận được gì <span className="text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">— nói thẳng</span>
             </h2>
             <p className="text-lg text-slate-400 mb-8">
-              Chúng tôi đã chắt lọc những kỹ thuật cốt lõi nhất để giúp bạn từ "con số 0" trở thành người chơi tự tin trên sân chỉ trong khoảng thời gian ngắn nhất!
+              Khóa học không nhồi nhét “tính năng”. Sau mỗi tuần, bạn ra sân đánh đôi có cảm giác kiểm soát hơn, ít lỗi ngớ ngẩn hơn và buổi tập đi thẳng vào chỗ cần sửa.
             </p>
 
             <ul className="space-y-6">
               {[
-                "Giáo trình 'Thực Chiến': Bỏ qua lý thuyết rườm rà, tập trung đánh được ngay",
-                "Thời gian cực kỳ linh hoạt: Tập trưa, tối hoặc cuối tuần tùy lịch rảnh",
-                "Huấn luyện viên tận tâm: Chỉnh sửa từng dáng đứng, cách vung vợt",
-                "An toàn tuyệt đối: Đảm bảo chơi đúng kỹ thuật, hạn chế chấn thương",
+                "Nhìn sân bằng “mắt đôi”: biết chỗ an toàn, chỗ đang lộ để đỡ đứng chồng lên bạn đánh.",
+                "Lên lưới không còn mù mờ: biết khi nào lên để ăn điểm, khi nào ở lại cho chắc.",
+                "NVZ không còn là nỗi sợ: dink đủ dùng để giảm lỗi, giữ rally, tìm cú dứt điểm.",
+                "Checklist trước buổi tập: sửa 2–3 thứ cụ thể, không lãng phí giờ quý của bạn.",
               ].map((item, index) => (
                 <li key={index} className="flex items-start gap-6 bg-navy-light/30 p-4 rounded-xl border border-white/5 hover:border-brand/30 transition-colors">
                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-brand flex items-center justify-center shadow-[0_0_15px_rgba(234,255,0,0.4)]">
@@ -76,7 +76,7 @@ export default function Solution() {
             <div className="mt-10">
               <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-brand to-emerald-500">
                 <div className="px-4 py-3 md:px-6 bg-darker rounded-full text-white font-medium text-xs md:text-sm lg:text-base xl:whitespace-nowrap lg:whitespace-nowrap md:whitespace-nowrap whitespace-nowrap overflow-x-auto custom-scrollbar">
-                  Cam kết: Bạn sẽ chắc chắn Tự tin nhập môn nhờ thông tin tập luyện đơn giản, dễ hiểu!
+                  Kết quả sau 4 tuần: Cảm giác lên sân là “mình có kế hoạch”, không phải “mình đến cho có mặt”.
                 </div>
               </div>
             </div>

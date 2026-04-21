@@ -6,29 +6,29 @@ import { Zap, ShieldCheck, HeartPulse, Medal } from "lucide-react";
 const benefits = [
   {
     icon: <Medal className="w-12 h-12 text-navy" />,
-    title: "Tự tin vung vợt",
-    description: "Nắm vững luật chơi, biết cách giao bóng, trả giao bóng và dứt điểm cơ bản. Tự tin 'ghép kèo' với bất kỳ ai!",
+    title: "Tuần 1 - Đỡ 'ngơ' trên sân",
+    description: "Bạn đứng đúng chỗ, di chuyển ít hơn nhưng lại che sân tốt hơn — hết kiểu chạy loạn xạ mà vẫn lỗ hổng.",
     color: "bg-brand",
     textColor: "text-navy",
   },
   {
     icon: <Zap className="w-12 h-12 text-white" />,
-    title: "Xả stress cực đã",
-    description: "Đốt cháy hàng trăm calo mỗi giờ, đánh bay mọi căng thẳng sau những giờ ngồi làm việc liên tục trước màn hình.",
+    title: "Tuần 2 - Mở trận có ý đồ",
+    description: "Serve và return không còn 'đưa bóng qua cho có'; bạn bắt nhịp rally theo hướng mình muốn.",
     color: "bg-sky",
     textColor: "text-white",
   },
   {
-    icon: <HeartPulse className="w-12 h-12 text-white" />,
-    title: "Tăng cường thể lực",
-    description: "Vận động toàn thân hiệu quả nhưng cực kỳ thân thiện với xương khớp, hạn chế tối đa chấn thương.",
+    icon: <ShieldCheck className="w-12 h-12 text-white" />,
+    title: "Tuần 3 - Lên lưới & NVZ",
+    description: "Biết khi nào lên để gây áp lực, khi nào giữ chân; ở NVZ không còn chỉ đứng chịu trận.",
     color: "bg-accent",
     textColor: "text-white",
   },
   {
-    icon: <ShieldCheck className="w-12 h-12 text-white" />,
-    title: "Mở rộng quan hệ",
-    description: "Gia nhập cộng đồng Pickleball năng động, văn minh và kết nối với những người bạn mới cùng sở thích.",
+    icon: <HeartPulse className="w-12 h-12 text-white" />,
+    title: "Tuần 4 - Đôi ăn ý",
+    description: "Hai người hiểu vai, nói ít mà vẫn khớp; chọn cú đánh theo tình huống — trận 'đỡ rối' hẳn.",
     color: "bg-navy-light",
     textColor: "text-white",
   },
@@ -46,7 +46,7 @@ export default function Benefits() {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase text-white mb-6 tracking-tight"
           >
-            Bạn Sẽ Nhận Được Gì Sau <span className="text-brand">Khóa Học Này?</span>
+            4 tuần — <span className="text-brand">mỗi tuần một sự tự tin</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -55,7 +55,7 @@ export default function Benefits() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-slate-400 max-w-4xl mx-auto font-bold italic"
           >
-            Tự tin ra sân, xả stress hiệu quả và mở rộng những mối quan hệ mới - tất cả đều chờ đón bạn.
+            Thiết kế cho người bận: mỗi ngày một chút, nhưng mỗi tuần phải thấy “chơi khác đi” khi ra sân đôi.
           </motion.p>
         </div>
 

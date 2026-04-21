@@ -5,20 +5,20 @@ import { XCircle } from "lucide-react";
 
 const painPoints = [
   {
-    title: "Lịch trình dày đặc",
-    description: "Sáng bận rộn ở văn phòng, tối về mệt mỏi, không có thời gian theo đuổi những khóa học kéo dài hàng tháng trời.",
+    title: "Lịch tập chập chờn",
+    description: "Bận quá, lịch tập cứ chập chờn — lên sân chỉ “đánh cho đỡ cứng người”, chứ chưa kịp sửa gì.",
   },
   {
-    title: "Sợ chấn thương",
-    description: "Lâu ngày không vận động thể thao, lo lắng việc tự tập sai tư thế sẽ dẫn đến đau nhức xương khớp, ảnh hưởng công việc.",
+    title: "Thử hết mọi thứ",
+    description: "Drop, drive, lob… thử đủ kiểu xong về nhà vẫn không biết mình cần nhất cú đánh nào cho đánh đôi.",
   },
   {
-    title: "Choáng ngợp thông tin",
-    description: "Xem video hướng dẫn trên mạng nhưng luật chơi quá rườm rà, không biết bắt đầu từ đâu, cách chọn vợt ra sao.",
+    title: "Đánh đôi như đánh đơn",
+    description: "Không rõ lúc nào mình cover, lúc nào nhường cho bạn. Serve và return quá an toàn, không tạo được áp lực.",
   },
   {
-    title: "Ngại ra sân vì 'Gà mờ'",
-    description: "Rất muốn tham gia cùng hội bạn nhưng sợ đánh hỏng, làm 'tạ' kéo lùi cả đội và mất tự tin.",
+    title: "Ngại lên lưới, sợ NVZ",
+    description: "Lên lưới kiểu “thấy người ta lên mình lên”, nghe NVZ tưởng khó nên né, trong khi chỉ cần dink đủ dùng là trận đã khác.",
   },
 ];
 
@@ -34,7 +34,7 @@ export default function PainPoints() {
             transition={{ duration: 0.6 }}
             className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase text-white mb-6 tracking-tight"
           >
-            Bạn Có Đang Bỏ Lỡ Trào Lưu Mới Chỉ Vì Những <span className="text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">"Rào Cản"</span> Này?
+            Có quen không? Những <span className="text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">"Hạt cát"</span> làm bạn khó chịu trên sân
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -43,7 +43,7 @@ export default function PainPoints() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-slate-400 max-w-2xl mx-auto"
           >
-            Đừng lo lắng! Rất nhiều người bận rộn giống như bạn cũng từng gặp những khó khăn này trước khi tìm thấy giải pháp của chúng tôi.
+            Thua thường đến từ nhịp và vị trí, không phải từ một cú hoành tráng nào cả. Rất nhiều người bận rộn cũng gặp cảnh này.
           </motion.p>
         </div>
 

@@ -13,15 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pickleball 30 Phút - Học Nhanh Chơi Chất",
-  description: "Khóa học Pickleball 30 phút giúp bạn nắm bắt kỹ thuật cơ bản, tự tin ra sân thi đấu ngay. Trải nghiệm môn thể thao hot nhất hiện nay!",
-  keywords: "pickleball, học pickleball, khóa học pickleball, pickleball 30 phút, dạy chơi pickleball, thể thao",
+  title: "Pickleball cho Người Nhập Môn",
+  description: "Dành cho người bận rộn. Học online trước để ra sân với Coach không còn là buổi lý thuyết kéo dài, mà là buổi bạn đánh bóng có mục đích.",
+  keywords: "pickleball, học pickleball, khóa học pickleball, pickleball cho người nhập môn, pickleball thực chiến",
   openGraph: {
-    title: "Pickleball 30 Phút - Học Nhanh Chơi Chất",
-    description: "Nắm bắt kỹ thuật và ra sân thi đấu Pickleball chỉ sau 30 phút làm quen. Đăng ký ngay hôm nay!",
+    title: "Pickleball cho Người Nhập Môn",
+    description: "Dành cho người bận rộn. Học online trước để ra sân với Coach không còn là buổi lý thuyết kéo dài.",
     type: "website",
     locale: "vi_VN",
-    siteName: "Pickleball 30 Phút",
+    siteName: "Pickleball cho Người Nhập Môn",
   },
 };
 
