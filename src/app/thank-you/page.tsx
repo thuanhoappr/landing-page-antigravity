@@ -31,12 +31,12 @@ export default function ThankYouPage() {
         </h1>
         
         <p className="text-slate-400 text-lg mb-8">
-          Cảm ơn bạn đã quan tâm đến Khóa huấn luyện Pickleball Thực chiến. Chuyên viên của chúng tôi sẽ liên hệ lại với bạn trong vòng 24h tới để tư vấn lộ trình.
+          Cảm ơn bạn đã quan tâm đến Khóa huấn luyện Pickleball Thực chiến. Trợ lý Coach PPR Level 2 sẽ liên hệ lại với bạn trong vòng 24h tới để tư vấn lộ trình.
         </p>
 
         <div className="bg-slate-800/50 rounded-2xl p-6 mb-8 text-left border border-slate-700/50">
           <h3 className="text-white font-medium mb-2 flex items-center gap-2">
-            Bước tiếp theo:
+            Kết nối trực tiếp Coach:
           </h3>
           <p className="text-slate-400 text-sm mb-4">
             Hãy nhắn tin ngay với Huấn luyện viên qua Zalo để xác nhận đăng ký và nhận tư vấn lộ trình học phù hợp nhất.
@@ -48,7 +48,7 @@ export default function ThankYouPage() {
             className="w-full flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-[#0055D4] text-white py-3 px-4 rounded-xl font-medium transition-colors shadow-lg shadow-blue-500/20"
           >
             <MessageCircle className="w-5 h-5" />
-            Liên Hệ Zalo Admin (0919117687)
+            Liên hệ Coach PPR 0919.117.687
           </a>
         </div>
 
