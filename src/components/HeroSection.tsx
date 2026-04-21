@@ -70,7 +70,7 @@ export default function HeroSection() {
             onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
             className="w-full sm:w-auto px-5 py-3 text-base font-bold italic uppercase text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm border border-white/20 transition-colors focus:outline-none"
           >
-            Tìm hiểu thêm
+            Xem Giáo trình Tập Online
           </button>
         </motion.div>
         
