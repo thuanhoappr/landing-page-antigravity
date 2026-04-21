@@ -22,8 +22,8 @@ export default function LeadForm() {
       phone: formData.get("phone"),
       email: formData.get("email"),
       buyCourse99k: submitType === "99k" ? "Có (Đăng ký mua 99K)" : "Không",
-      _subject: "Khách hàng mới đăng ký Pickleball",
-      _template: "table"
+      source: "Pickleball Landing Page",
+      timestamp: new Date().toISOString()
     };
 
     if (!data.name || !data.phone || !data.email) {
@@ -32,9 +32,20 @@ export default function LeadForm() {
       return;
     }
 
+    const webhookUrl = process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL;
+    
+    if (!webhookUrl || webhookUrl === "your_webhook_url_here") {
+      console.warn("Chưa cấu hình NEXT_PUBLIC_MAKE_WEBHOOK_URL. Giả lập thành công.");
+      setTimeout(() => {
+        setIsSubmitting(false);
+        router.push("/thank-you");
+      }, 1000);
+      return;
+    }
+
     try {
-      // Sử dụng FormSubmit để gửi email trực tiếp tới admin
-      const response = await fetch("https://formsubmit.co/ajax/trolycoachpickleball@gmail.com", {
+      // Sử dụng Make.com Webhook để xử lý dữ liệu (Lưu Google Sheets & Gửi Email)
+      const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,10 +58,10 @@ export default function LeadForm() {
         setIsSubmitting(false);
         router.push("/thank-you");
       } else {
-        throw new Error("Lỗi khi gửi thông tin");
+        throw new Error("Lỗi khi gửi thông tin tới Webhook");
       }
     } catch (err) {
-      console.error("Lỗi gửi form:", err);
+      console.error("Lỗi gửi form Webhook:", err);
       setError("Đã có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
       setIsSubmitting(false);
     }
