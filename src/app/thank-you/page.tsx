@@ -39,12 +39,17 @@ export default function ThankYouPage() {
             Bước tiếp theo:
           </h3>
           <p className="text-slate-400 text-sm mb-4">
-            Để không bỏ lỡ các mẹo tập luyện miễn phí và nhận thêm tài liệu về luật Pickleball, hãy tham gia ngay vào Group Zalo Kín của chúng tôi.
+            Hãy nhắn tin ngay với Huấn luyện viên qua Zalo để xác nhận đăng ký và nhận tư vấn lộ trình học phù hợp nhất.
           </p>
-          <button className="w-full flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-[#0055D4] text-white py-3 px-4 rounded-xl font-medium transition-colors">
+          <a 
+            href="https://zalo.me/0919117687" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="w-full flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-[#0055D4] text-white py-3 px-4 rounded-xl font-medium transition-colors shadow-lg shadow-blue-500/20"
+          >
             <MessageCircle className="w-5 h-5" />
-            Tham Gia Group Zalo (Nhận Quà)
-          </button>
+            Liên Hệ Zalo Admin (0919117687)
+          </a>
         </div>
 
         <Link 

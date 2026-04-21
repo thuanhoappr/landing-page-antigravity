@@ -9,6 +9,7 @@ export default function LeadForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitType, setSubmitType] = useState<"free" | "99k">("free");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,7 +21,9 @@ export default function LeadForm() {
       name: formData.get("name"),
       phone: formData.get("phone"),
       email: formData.get("email"),
-      source: "Pickleball Landing Page - Tốc Độ",
+      buyCourse99k: submitType === "99k" ? "Có (Đăng ký mua 99K)" : "Không",
+      _subject: "Khách hàng mới đăng ký Pickleball",
+      _template: "table"
     };
 
     if (!data.name || !data.phone || !data.email) {
@@ -29,23 +32,13 @@ export default function LeadForm() {
       return;
     }
 
-    const webhookUrl = process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL;
-    
-    // Nếu chưa cấu hình Webhook URL, dùng giả lập để không block luồng test
-    if (!webhookUrl || webhookUrl === "your_webhook_url_here") {
-      console.warn("Chưa cấu hình NEXT_PUBLIC_MAKE_WEBHOOK_URL, đang chạy chế độ giả lập.");
-      setTimeout(() => {
-        setIsSubmitting(false);
-        router.push("/thank-you");
-      }, 1500);
-      return;
-    }
-
     try {
-      const response = await fetch(webhookUrl, {
+      // Sử dụng FormSubmit để gửi email trực tiếp tới admin
+      const response = await fetch("https://formsubmit.co/ajax/trolycoachpickleball@gmail.com", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(data),
       });
@@ -57,7 +50,7 @@ export default function LeadForm() {
         throw new Error("Lỗi khi gửi thông tin");
       }
     } catch (err) {
-      console.error("Lỗi Webhook:", err);
+      console.error("Lỗi gửi form:", err);
       setError("Đã có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
       setIsSubmitting(false);
     }
@@ -166,27 +159,59 @@ export default function LeadForm() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full group flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-black italic uppercase text-lg text-white transition-all mt-2 ${
-                  isSubmitting 
-                    ? "bg-slate-600 cursor-not-allowed" 
-                    : "bg-accent hover:bg-accent-hover hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(255,77,0,0.4)] border-b-4 border-accent-hover"
-                }`}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-darker/30 border-t-darker rounded-full animate-spin" />
-                    Đang gửi...
-                  </div>
-                ) : (
-                  <>
-                    TẬP THỬ MIỄN PHÍ
-                    <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                  </>
-                )}
-              </button>
+              <div className="pt-4 space-y-4">
+                <button
+                  type="submit"
+                  onClick={() => setSubmitType("99k")}
+                  disabled={isSubmitting}
+                  className={`w-full group flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-black italic uppercase text-lg text-white transition-all ${
+                    isSubmitting 
+                      ? "bg-slate-600 cursor-not-allowed" 
+                      : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(245,158,11,0.4)] border-b-4 border-orange-600"
+                  }`}
+                >
+                  {isSubmitting && submitType === "99k" ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Đang gửi...
+                    </div>
+                  ) : (
+                    <>
+                      MUA KHÓA HỌC ƯU ĐÃI 99K
+                      <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-700/50"></div>
+                  <span className="flex-shrink-0 mx-4 text-slate-500 text-sm font-medium">HOẶC</span>
+                  <div className="flex-grow border-t border-slate-700/50"></div>
+                </div>
+
+                <button
+                  type="submit"
+                  onClick={() => setSubmitType("free")}
+                  disabled={isSubmitting}
+                  className={`w-full group flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-black italic uppercase text-lg text-white transition-all ${
+                    isSubmitting 
+                      ? "bg-slate-600 cursor-not-allowed" 
+                      : "bg-accent hover:bg-accent-hover hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(255,77,0,0.4)] border-b-4 border-accent-hover"
+                  }`}
+                >
+                  {isSubmitting && submitType === "free" ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Đang gửi...
+                    </div>
+                  ) : (
+                    <>
+                      TẬP THỬ MIỄN PHÍ
+                      <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
               {error && (
                 <div className="bg-rose-500/10 border border-rose-500/50 text-rose-500 text-sm p-3 rounded-lg text-center mt-4">
                   {error}
