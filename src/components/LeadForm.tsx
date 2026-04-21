@@ -9,18 +9,21 @@ export default function LeadForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitType, setSubmitType] = useState<"free" | "99k">("free");
+  const [currentAction, setCurrentAction] = useState<"free" | "99k" | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = async (submitType: "free" | "99k") => {
     setIsSubmitting(true);
+    setCurrentAction(submitType);
     setError(null);
     
-    const formData = new FormData(e.currentTarget);
     const data = {
-      name: formData.get("name"),
-      phone: formData.get("phone"),
-      email: formData.get("email"),
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
       buyCourse99k: submitType === "99k" ? "Có (Đăng ký mua 99K)" : "Không",
       source: "Pickleball Landing Page",
       timestamp: new Date().toISOString()
@@ -29,6 +32,7 @@ export default function LeadForm() {
     if (!data.name || !data.phone || !data.email) {
       setError("Vui lòng nhập lại đủ thông tin để Nhận Quà");
       setIsSubmitting(false);
+      setCurrentAction(null);
       return;
     }
 
@@ -64,6 +68,7 @@ export default function LeadForm() {
       console.error("Lỗi gửi form Webhook:", err);
       setError("Đã có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
       setIsSubmitting(false);
+      setCurrentAction(null);
     }
   };
 
@@ -118,7 +123,7 @@ export default function LeadForm() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <div className="space-y-4">
               <div className="space-y-1">
                 <label htmlFor="name" className="text-sm font-medium text-slate-300 block ml-1 mb-1">Tên/Nickname*</label>
                 <div className="relative">
@@ -129,7 +134,9 @@ export default function LeadForm() {
                     type="text"
                     id="name"
                     name="name"
-                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="off"
                     className="w-full bg-darker border border-slate-700 text-white rounded-xl py-2.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                     placeholder="Nguyễn Văn A"
                   />
@@ -146,7 +153,9 @@ export default function LeadForm() {
                     type="tel"
                     id="phone"
                     name="phone"
-                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    autoComplete="off"
                     className="w-full bg-darker border border-slate-700 text-white rounded-xl py-2.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                     placeholder="0912 345 678"
                   />
@@ -163,7 +172,9 @@ export default function LeadForm() {
                     type="email"
                     id="email"
                     name="email"
-                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="off"
                     className="w-full bg-darker border border-slate-700 text-white rounded-xl py-2.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                     placeholder="email@example.com"
                   />
@@ -172,8 +183,8 @@ export default function LeadForm() {
 
               <div className="pt-4 space-y-4">
                 <button
-                  type="submit"
-                  onClick={() => setSubmitType("99k")}
+                  type="button"
+                  onClick={() => handleSubmit("99k")}
                   disabled={isSubmitting}
                   className={`w-full group flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-black italic uppercase text-lg text-white transition-all ${
                     isSubmitting 
@@ -181,7 +192,7 @@ export default function LeadForm() {
                       : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(245,158,11,0.4)] border-b-4 border-orange-600"
                   }`}
                 >
-                  {isSubmitting && submitType === "99k" ? (
+                  {isSubmitting && currentAction === "99k" ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Đang gửi...
@@ -201,8 +212,8 @@ export default function LeadForm() {
                 </div>
 
                 <button
-                  type="submit"
-                  onClick={() => setSubmitType("free")}
+                  type="button"
+                  onClick={() => handleSubmit("free")}
                   disabled={isSubmitting}
                   className={`w-full group flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-black italic uppercase text-lg text-white transition-all ${
                     isSubmitting 
@@ -210,7 +221,7 @@ export default function LeadForm() {
                       : "bg-accent hover:bg-accent-hover hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(255,77,0,0.4)] border-b-4 border-accent-hover"
                   }`}
                 >
-                  {isSubmitting && submitType === "free" ? (
+                  {isSubmitting && currentAction === "free" ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Đang gửi...
@@ -231,7 +242,7 @@ export default function LeadForm() {
               <p className="text-center text-xs text-slate-500 mt-4">
                 Thông tin của bạn được bảo mật tuyệt đối. Chúng tôi không spam.
               </p>
-            </form>
+            </div>
           </div>
         </motion.div>
       </div>
