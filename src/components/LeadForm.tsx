@@ -12,6 +12,7 @@ export default function LeadForm() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [experience, setExperience] = useState("Chưa");
   const [obstacle, setObstacle] = useState("");
   const [goal, setGoal] = useState("Biết chơi cơ bản");
@@ -32,6 +33,7 @@ export default function LeadForm() {
     const data = {
       name: name.trim(),
       phone: phone.trim(),
+      email: email.trim(),
       experience,
       obstacle: obstacle.trim(),
       goal: finalGoal,
@@ -145,6 +147,22 @@ export default function LeadForm() {
                   autoComplete="off"
                   className={inputClass}
                   placeholder="0912 345 678"
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1">
+                <label htmlFor="email" className={labelClass}>
+                  Email (để mình gửi tài liệu qua hộp thư):
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="off"
+                  className={inputClass}
+                  placeholder="email@example.com"
                 />
               </div>
 
