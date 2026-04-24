@@ -57,7 +57,7 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-start gap-6"
         >
           <button
-            onClick={() => document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
             className="group relative inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 text-base font-black italic uppercase text-white bg-accent rounded-lg overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_8px_rgba(255,77,0,0.4)] focus:outline-none border-b-4 border-accent-hover"
           >
             <span className="relative z-10 flex items-center gap-2">
@@ -67,10 +67,10 @@ export default function HeroSection() {
           </button>
           
           <button
-            onClick={() => document.getElementById("benefits")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" })}
             className="w-full sm:w-auto px-5 py-3 text-base font-bold italic uppercase text-white bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm border border-white/20 transition-colors focus:outline-none"
           >
-            Xem Giáo trình Thực Chiến
+            Nhận Quà Tặng Online
           </button>
         </motion.div>
         

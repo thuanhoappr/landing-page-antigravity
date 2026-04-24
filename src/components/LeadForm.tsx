@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 
+/** Kiểm tra SĐT Việt Nam: 9–11 số, cho phép +84 / 84 / 0 */
+function isValidPhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.startsWith("84") && digits.length >= 11) return true;
+  if (digits.startsWith("0") && digits.length >= 9 && digits.length <= 11) return true;
+  return digits.length >= 9 && digits.length <= 11;
+}
+
 export default function LeadForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,55 +27,75 @@ export default function LeadForm() {
   const [customGoal, setCustomGoal] = useState("");
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
     setError(null);
 
-    if (!name.trim() || !phone.trim()) {
-      setError("Vui lòng nhập tên và số điện thoại để tiếp tục.");
+    // --- Validation ---
+    if (!name.trim() || name.trim().length < 2) {
+      setError("Vui lòng nhập tên (ít nhất 2 ký tự).");
+      return;
+    }
+    if (!phone.trim() || !isValidPhone(phone.trim())) {
+      setError("Vui lòng nhập số điện thoại / Zalo hợp lệ.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const finalGoal = goal === "Khác" ? customGoal.trim() : goal;
+    if (goal === "Khác" && !finalGoal) {
+      setError("Vui lòng nhập mong muốn của bạn.");
       setIsSubmitting(false);
       return;
     }
 
-    const finalGoal = goal === "Khác" ? customGoal : goal;
-
-    const data = {
-      name: name.trim(),
-      phone: phone.trim(),
+    // --- Payload khớp với cột Google Sheets qua Make.com ---
+    const payload = {
+      ho_ten: name.trim(),
+      so_dien_thoai: phone.trim(),
       email: email.trim(),
-      experience,
-      obstacle: obstacle.trim(),
-      goal: finalGoal,
-      source: "Pickleball Landing Page",
-      timestamp: new Date().toISOString(),
+      kinh_nghiem: experience,
+      dieu_ngai: obstacle.trim(),
+      mong_muon: finalGoal,
+      nguon: "Pickleball Landing Page",
+      thoi_gian: new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }),
+      admin_email: "trolycoachpickleball@gmail.com",
     };
 
     const webhookUrl = process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL;
 
     if (!webhookUrl || webhookUrl === "your_webhook_url_here") {
-      console.warn("Chưa cấu hình NEXT_PUBLIC_MAKE_WEBHOOK_URL. Giả lập thành công.");
+      // Dev mode: giả lập thành công
+      console.warn("[LeadForm] NEXT_PUBLIC_MAKE_WEBHOOK_URL chưa cấu hình — giả lập thành công.");
+      console.table(payload);
       setTimeout(() => {
         setIsSubmitting(false);
         router.push("/thank-you");
-      }, 1000);
+      }, 800);
       return;
     }
 
     try {
       const response = await fetch(webhookUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        setIsSubmitting(false);
         router.push("/thank-you");
       } else {
-        throw new Error("Lỗi khi gửi thông tin tới Webhook");
+        const text = await response.text().catch(() => "");
+        console.error("[LeadForm] Webhook error:", response.status, text);
+        throw new Error(`HTTP ${response.status}`);
       }
     } catch (err) {
-      console.error("Lỗi gửi form:", err);
-      setError("Đã có lỗi xảy ra. Vui lòng kiểm tra kết nối mạng và thử lại!");
+      console.error("[LeadForm] Lỗi gửi form:", err);
+      setError(
+        "Không gửi được thông tin. Vui lòng kiểm tra kết nối mạng và thử lại, hoặc liên hệ trực tiếp qua Zalo."
+      );
       setIsSubmitting(false);
     }
   };
@@ -95,37 +123,42 @@ export default function LeadForm() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand to-emerald-500" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+            {/* Left: value proposition */}
             <div>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase text-white mb-4">
-                Thấy khác hẳn ngay từ <span className="text-brand">rally đầu tiên</span>
+                Nhận Quà Tặng Online{" "}
+                <span className="text-brand">ngay hôm nay</span>
               </h2>
               <p className="text-slate-400 mb-8">
-                Để lại thông tin. Mình gửi bạn lộ trình 4 tuần và bộ checklist "bỏ túi" trước khi
-                gặp Coach — đỡ phí buổi tập, đỡ phí công sức bạn bỏ ra cho môn này.
+                Để lại thông tin — mình gửi bạn lộ trình 4 tuần và bộ checklist
+                &quot;bỏ túi&quot; trước khi gặp Coach, đỡ phí buổi tập đầu tiên.
               </p>
               <div className="space-y-4">
-                {["Lộ trình 4 tuần thực chiến", 'Checklist "bỏ túi" sửa lỗi trên sân', "Cảm giác kiểm soát, ít lỗi ngớ ngẩn"].map(
-                  (item, i) => (
-                    <div key={i} className="flex items-center gap-4 text-slate-300">
-                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
-                        <span className="text-brand font-bold">{i + 1}</span>
-                      </div>
-                      <p>{item}</p>
+                {[
+                  "Lộ trình 4 tuần thực chiến",
+                  'Checklist "bỏ túi" sửa lỗi trên sân',
+                  "Cảm giác kiểm soát, ít lỗi ngớ ngẩn",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 text-slate-300">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
+                      <span className="text-brand font-bold">{i + 1}</span>
                     </div>
-                  )
-                )}
+                    <p>{item}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
+            {/* Right: form fields */}
             <div className="space-y-4">
-              {/* Câu 1 */}
+              {/* Câu 1 — Tên */}
               <div className="space-y-1">
-                <label htmlFor="name" className={labelClass}>
+                <label htmlFor="lf-name" className={labelClass}>
                   1. Anh/Chị tên gì? *
                 </label>
                 <input
                   type="text"
-                  id="name"
+                  id="lf-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoComplete="off"
@@ -134,14 +167,14 @@ export default function LeadForm() {
                 />
               </div>
 
-              {/* Câu 2 */}
+              {/* Câu 2 — SĐT/Zalo */}
               <div className="space-y-1">
-                <label htmlFor="phone" className={labelClass}>
+                <label htmlFor="lf-phone" className={labelClass}>
                   2. SĐT/Zalo để mình gửi tài liệu &amp; hỗ trợ nhanh: *
                 </label>
                 <input
                   type="tel"
-                  id="phone"
+                  id="lf-phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   autoComplete="off"
@@ -150,14 +183,14 @@ export default function LeadForm() {
                 />
               </div>
 
-              {/* Email */}
+              {/* Email (optional) */}
               <div className="space-y-1">
-                <label htmlFor="email" className={labelClass}>
+                <label htmlFor="lf-email" className={labelClass}>
                   Email (để mình gửi tài liệu qua hộp thư):
                 </label>
                 <input
                   type="email"
-                  id="email"
+                  id="lf-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="off"
@@ -166,13 +199,13 @@ export default function LeadForm() {
                 />
               </div>
 
-              {/* Câu 3 */}
+              {/* Câu 3 — Kinh nghiệm */}
               <div className="space-y-1">
-                <label htmlFor="experience" className={labelClass}>
-                  3. Hiện tại Anh/Chị đã từng chơi pickleball chưa? *
+                <label htmlFor="lf-experience" className={labelClass}>
+                  3. Anh/Chị đã từng chơi pickleball chưa? *
                 </label>
                 <select
-                  id="experience"
+                  id="lf-experience"
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
                   className={inputClass}
@@ -183,13 +216,13 @@ export default function LeadForm() {
                 </select>
               </div>
 
-              {/* Câu 4 */}
+              {/* Câu 4 — Điều ngại */}
               <div className="space-y-1">
-                <label htmlFor="obstacle" className={labelClass}>
-                  4. Điều khiến Anh/Chị chưa bắt đầu hoặc còn ngại ra sân là gì?
+                <label htmlFor="lf-obstacle" className={labelClass}>
+                  4. Điều khiến Anh/Chị còn ngại ra sân là gì?
                 </label>
                 <textarea
-                  id="obstacle"
+                  id="lf-obstacle"
                   value={obstacle}
                   onChange={(e) => setObstacle(e.target.value)}
                   rows={2}
@@ -198,13 +231,13 @@ export default function LeadForm() {
                 />
               </div>
 
-              {/* Câu 5 */}
+              {/* Câu 5 — Mong muốn */}
               <div className="space-y-1">
-                <label htmlFor="goal" className={labelClass}>
+                <label htmlFor="lf-goal" className={labelClass}>
                   5. Anh/Chị mong muốn điều gì nhất khi học pickleball? *
                 </label>
                 <select
-                  id="goal"
+                  id="lf-goal"
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   className={inputClass}
@@ -218,12 +251,12 @@ export default function LeadForm() {
 
               {goal === "Khác" && (
                 <div className="space-y-1">
-                  <label htmlFor="customGoal" className={labelClass}>
+                  <label htmlFor="lf-customGoal" className={labelClass}>
                     Mong muốn khác của Anh/Chị là gì? *
                   </label>
                   <input
                     type="text"
-                    id="customGoal"
+                    id="lf-customGoal"
                     value={customGoal}
                     onChange={(e) => setCustomGoal(e.target.value)}
                     className={inputClass}
@@ -232,6 +265,7 @@ export default function LeadForm() {
                 </div>
               )}
 
+              {/* Submit */}
               <div className="pt-4">
                 <button
                   type="button"
@@ -250,7 +284,7 @@ export default function LeadForm() {
                     </div>
                   ) : (
                     <>
-                      ĐĂNG KÝ NHẬN TÀI LIỆU
+                      ĐĂNG KÝ NHẬN QUÀ TẶNG
                       <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </>
                   )}
@@ -258,10 +292,11 @@ export default function LeadForm() {
               </div>
 
               {error && (
-                <div className="bg-rose-500/10 border border-rose-500/50 text-rose-500 text-sm p-3 rounded-lg text-center">
+                <div className="bg-rose-500/10 border border-rose-500/50 text-rose-400 text-sm p-3 rounded-lg text-center">
                   {error}
                 </div>
               )}
+
               <p className="text-center text-xs text-slate-500">
                 Thông tin của bạn được bảo mật tuyệt đối. Chúng tôi không spam.
               </p>
