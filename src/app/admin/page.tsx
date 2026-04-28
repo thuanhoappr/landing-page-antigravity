@@ -5,6 +5,9 @@ import {
 } from "@/lib/brainDb";
 import AdminPanelClient from "./AdminPanelClient";
 
+/** Luôn đọc DB mỗi request — tránh HTML tĩnh build-time (đơn hàng luôn rỗng). */
+export const dynamic = "force-dynamic";
+
 type Product = {
   id: number;
   name: string;

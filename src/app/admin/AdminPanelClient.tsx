@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type TabKey = "products" | "customers" | "orders";
 type Product = { id: number; name: string; price: number; description: string | null; quantity_remaining: number };
@@ -69,6 +69,11 @@ export default function AdminPanelClient({
     () => customers.map((item) => ({ value: String(item.id), label: `${item.name}${item.phone ? ` - ${item.phone}` : ""}` })),
     [customers],
   );
+
+  useEffect(() => {
+    void loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tải lại dữ liệu khi vào admin (tránh cache HTML cũ)
+  }, []);
 
   async function loadAll() {
     setBusy(true);
