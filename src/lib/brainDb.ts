@@ -120,6 +120,11 @@ async function ensurePgSchema() {
   `;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS sepay_invoice TEXT`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS sepay_webhook_processed (
+      external_id TEXT PRIMARY KEY
+    )
+  `;
 }
 
 async function ensurePg() {
@@ -223,6 +228,11 @@ function initSqliteSchema(db: Database.Database) {
       "CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_sepay_invoice ON orders(sepay_invoice) WHERE sepay_invoice IS NOT NULL",
     );
   }
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sepay_webhook_processed (
+      external_id TEXT PRIMARY KEY
+    )
+  `);
 }
 
 function getSqliteOrThrow(): Database.Database {
@@ -1035,4 +1045,108 @@ export async function sepayIpnMarkPaid(invoice: string): Promise<{
     db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(order.id);
     return { matched: true as const, alreadyPaid: false };
   })();
+}
+
+/** Trả true nếu lần đầu nhận id webhook (để tránh xử lý trùng khi SePay retry). */
+export async function consumeSeapyWebhookOnce(externalId: string): Promise<boolean> {
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    const rows = await sql`
+      INSERT INTO sepay_webhook_processed (external_id) VALUES (${externalId})
+      ON CONFLICT (external_id) DO NOTHING
+      RETURNING external_id
+    `;
+    return rows.length > 0;
+  }
+  const db = getSqliteOrThrow();
+  const r = db.prepare("INSERT OR IGNORE INTO sepay_webhook_processed (external_id) VALUES (?)").run(externalId);
+  return r.changes > 0;
+}
+
+function concatBankText(payload: {
+  code?: string | null;
+  content?: string | null;
+  description?: string | null;
+}) {
+  return [payload.code, payload.content, payload.description]
+    .map((s) => (s == null ? "" : String(s)))
+    .join(" ");
+}
+
+export function extractPbInvoiceFromText(text: string): string | null {
+  const m = text.match(/PB-\d+/);
+  return m ? m[0] : null;
+}
+
+async function findUniquePendingInvoiceByAmount(amountVnd: number): Promise<string | null> {
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    const rows = await sql`
+      SELECT sepay_invoice FROM orders
+      WHERE status = 'pending'
+        AND sepay_invoice IS NOT NULL
+        AND amount = ${amountVnd}
+        AND created_at > NOW() - INTERVAL '7 days'
+      ORDER BY id DESC
+      LIMIT 2
+    `;
+    if (rows.length !== 1) return null;
+    return String((rows[0] as { sepay_invoice: string }).sepay_invoice);
+  }
+  const db = getSqliteOrThrow();
+  const rows = db
+    .prepare(
+      `SELECT sepay_invoice FROM orders
+       WHERE status = 'pending' AND sepay_invoice IS NOT NULL AND amount = ?
+         AND datetime(created_at) > datetime('now', '-7 days')
+       ORDER BY id DESC LIMIT 2`,
+    )
+    .all(amountVnd) as { sepay_invoice: string }[];
+  if (rows.length !== 1) return null;
+  return rows[0].sepay_invoice;
+}
+
+/**
+ * Webhook "Có tiền vào" (JSON có id, content, transferAmount, …) — tài liệu SePay.
+ * Tìm mã PB- trong nội dung; nếu không có thì khớp đơn pending theo số tiền khi chỉ có 1 đơn (mã VietQR PAY…).
+ */
+export async function sepayProcessBankIncomeWebhook(payload: {
+  id?: number;
+  transferType?: string;
+  transferAmount?: number;
+  code?: string | null;
+  content?: string | null;
+  description?: string | null;
+  referenceCode?: string | null;
+}): Promise<{ handled: boolean; duplicate?: boolean; matched?: boolean }> {
+  await ensurePg();
+  if (payload.transferType && payload.transferType !== "in") {
+    return { handled: false };
+  }
+  const amt = Number(payload.transferAmount);
+  if (!Number.isFinite(amt) || amt <= 0) {
+    return { handled: false };
+  }
+  const extId =
+    payload.id != null && Number.isFinite(Number(payload.id)) && Number(payload.id) > 0
+      ? `bank:${payload.id}`
+      : `bank:${amt}:${String(payload.content ?? "")}:${String(payload.referenceCode ?? "")}`;
+  const first = await consumeSeapyWebhookOnce(extId);
+  if (!first) {
+    return { handled: true, duplicate: true, matched: true };
+  }
+
+  const text = concatBankText(payload);
+  let invoice = extractPbInvoiceFromText(text);
+  if (!invoice) {
+    invoice = await findUniquePendingInvoiceByAmount(Math.round(amt));
+  }
+  if (!invoice) {
+    return { handled: true, matched: false };
+  }
+
+  const result = await sepayIpnMarkPaid(invoice);
+  return { handled: true, matched: result.matched };
 }
