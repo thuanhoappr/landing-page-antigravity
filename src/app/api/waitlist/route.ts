@@ -42,32 +42,37 @@ export async function POST(request: Request) {
     }
 
     if (email) {
-      const seq = loadEmailSequence();
-      const isTestMode = /\+test@/i.test(email);
-      const now = Date.now();
-      const offsets = isTestMode ? [0, 0, 0] : [0, 2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
+      try {
+        const seq = loadEmailSequence();
+        const isTestMode = /\+test@/i.test(email);
+        const now = Date.now();
+        const offsets = isTestMode ? [0, 0, 0] : [0, 2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
 
-      for (let i = 0; i < seq.length; i += 1) {
-        const step = seq[i];
-        await enqueueEmailAutomationJob({
-          customer_id: customerId,
-          email,
-          step: step.step,
-          subject: step.subject,
-          body: step.body.replace(/Chao ban/gi, `Chao ${name || "ban"}`),
-          send_at: new Date(now + offsets[i]).toISOString(),
-        });
-      }
-
-      // gửi ngay các job đến hạn (đặc biệt cho +test sẽ gửi đủ 3 email tức thì)
-      const due = await getDueEmailAutomationJobs(20);
-      for (const job of due) {
-        try {
-          await sendEmail({ to: job.email, subject: job.subject, text: job.body });
-          await markEmailAutomationJobSent(job.id);
-        } catch (e) {
-          console.error("[waitlist] send automation email failed", e);
+        for (let i = 0; i < seq.length; i += 1) {
+          const step = seq[i];
+          await enqueueEmailAutomationJob({
+            customer_id: customerId,
+            email,
+            step: step.step,
+            subject: step.subject,
+            body: step.body.replace(/Chao ban/gi, `Chao ${name || "ban"}`),
+            send_at: new Date(now + offsets[i]).toISOString(),
+          });
         }
+
+        // gửi ngay các job đến hạn (đặc biệt cho +test sẽ gửi đủ 3 email tức thì)
+        const due = await getDueEmailAutomationJobs(20);
+        for (const job of due) {
+          try {
+            await sendEmail({ to: job.email, subject: job.subject, text: job.body });
+            await markEmailAutomationJobSent(job.id);
+          } catch (e) {
+            console.error("[waitlist] send automation email failed", e);
+          }
+        }
+      } catch (e) {
+        // Không chặn lưu CRM nếu sequence/email gặp lỗi.
+        console.error("[waitlist] sequence/email error", e);
       }
     }
 
