@@ -1,51 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/brainDb";
+import { deleteOrderById, getOrderRecord, updateOrderPut } from "@/lib/brainDb";
 
 export const runtime = "nodejs";
-
-type OrderRecord = {
-  id: number;
-  customer_id: number;
-  product_id: number;
-  quantity: number;
-  amount: number;
-  status: string;
-  purchase_date: string;
-};
-
-type ProductStock = {
-  id: number;
-  price: number;
-  quantity_remaining: number;
-};
 
 function parseId(value: string) {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : null;
-}
-
-function getOrderView(orderId: number) {
-  return db
-    .prepare(
-      `
-        SELECT
-          o.id,
-          o.customer_id,
-          c.name AS customer_name,
-          o.product_id,
-          p.name AS product_name,
-          o.quantity,
-          o.amount,
-          o.status,
-          o.purchase_date,
-          o.created_at
-        FROM orders o
-        JOIN customers c ON c.id = o.customer_id
-        JOIN products p ON p.id = o.product_id
-        WHERE o.id = ?
-      `,
-    )
-    .get(orderId);
 }
 
 export async function PUT(
@@ -58,9 +18,7 @@ export async function PUT(
     return NextResponse.json({ error: "ID đơn hàng không hợp lệ." }, { status: 400 });
   }
 
-  const existing = db
-    .prepare("SELECT id, customer_id, product_id, quantity, amount, status, purchase_date FROM orders WHERE id = ?")
-    .get(id) as OrderRecord | undefined;
+  const existing = await getOrderRecord(id);
   if (!existing) {
     return NextResponse.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
   }
@@ -82,59 +40,20 @@ export async function PUT(
     return NextResponse.json({ error: "Số lượng phải lớn hơn 0." }, { status: 400 });
   }
 
-  const tx = db.transaction(() => {
-    const customer = db
-      .prepare("SELECT id FROM customers WHERE id = ?")
-      .get(customerId) as { id: number } | undefined;
-    if (!customer) {
-      throw new Error("CUSTOMER_NOT_FOUND");
-    }
-
-    const oldProduct = db
-      .prepare("SELECT id, price, quantity_remaining FROM products WHERE id = ?")
-      .get(existing.product_id) as ProductStock | undefined;
-    const newProduct = db
-      .prepare("SELECT id, price, quantity_remaining FROM products WHERE id = ?")
-      .get(productId) as ProductStock | undefined;
-
-    if (!oldProduct || !newProduct) {
-      throw new Error("PRODUCT_NOT_FOUND");
-    }
-
-    // Return previous reserved quantity to old product first.
-    db.prepare("UPDATE products SET quantity_remaining = quantity_remaining + ? WHERE id = ?").run(
-      existing.quantity,
-      existing.product_id,
-    );
-
-    const available = db
-      .prepare("SELECT quantity_remaining FROM products WHERE id = ?")
-      .get(productId) as { quantity_remaining: number };
-    if (available.quantity_remaining < quantity) {
-      throw new Error("NOT_ENOUGH_STOCK");
-    }
-
-    db.prepare("UPDATE products SET quantity_remaining = quantity_remaining - ? WHERE id = ?").run(
-      quantity,
-      productId,
-    );
-
-    const amount = Number(body.amount ?? newProduct.price * quantity);
-    if (!Number.isFinite(amount) || amount < 0) {
-      throw new Error("INVALID_AMOUNT");
-    }
-
-    db.prepare(
-      "UPDATE orders SET customer_id = ?, product_id = ?, quantity = ?, amount = ?, status = ?, purchase_date = ? WHERE id = ?",
-    ).run(customerId, productId, quantity, amount, status, purchaseDate, id);
+  const updated = await updateOrderPut(id, {
+    customer_id: customerId,
+    product_id: productId,
+    quantity,
+    amount: body.amount,
+    status,
+    purchase_date: purchaseDate,
   });
 
-  try {
-    tx();
-    const updated = getOrderView(id);
-    return NextResponse.json(updated);
-  } catch (error) {
-    const code = error instanceof Error ? error.message : "UNKNOWN";
+  if (updated === null) {
+    return NextResponse.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
+  }
+  if (updated && "error" in updated) {
+    const code = updated.error;
     if (code === "CUSTOMER_NOT_FOUND") {
       return NextResponse.json({ error: "Không tìm thấy khách hàng." }, { status: 404 });
     }
@@ -149,6 +68,8 @@ export async function PUT(
     }
     return NextResponse.json({ error: "Không cập nhật được đơn hàng." }, { status: 500 });
   }
+
+  return NextResponse.json(updated);
 }
 
 export async function DELETE(
@@ -161,33 +82,10 @@ export async function DELETE(
     return NextResponse.json({ error: "ID đơn hàng không hợp lệ." }, { status: 400 });
   }
 
-  const existing = db
-    .prepare(
-      "SELECT id, product_id, quantity, status, sepay_invoice FROM orders WHERE id = ?",
-    )
-    .get(id) as {
-      id: number;
-      product_id: number;
-      quantity: number;
-      status: string;
-      sepay_invoice: string | null;
-    } | undefined;
-  if (!existing) {
+  const ok = await deleteOrderById(id);
+  if (!ok) {
     return NextResponse.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
   }
-
-  const shouldRestoreStock =
-    existing.status === "paid" || (existing.status === "pending" && !existing.sepay_invoice);
-
-  db.transaction(() => {
-    db.prepare("DELETE FROM orders WHERE id = ?").run(id);
-    if (shouldRestoreStock) {
-      db.prepare("UPDATE products SET quantity_remaining = quantity_remaining + ? WHERE id = ?").run(
-        existing.quantity,
-        existing.product_id,
-      );
-    }
-  })();
 
   return NextResponse.json({ ok: true });
 }

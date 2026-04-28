@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, type CustomerRow } from "@/lib/brainDb";
+import { deleteCustomerIfNoOrders, updateCustomer, type CustomerRow } from "@/lib/brainDb";
 
 export const runtime = "nodejs";
 
@@ -35,23 +35,11 @@ export async function PUT(
   }
 
   try {
-    const result = db
-      .prepare(
-        "UPDATE customers SET name = ?, phone = ?, zalo = ?, registration_date = ? WHERE id = ?",
-      )
-      .run(name, phone, zalo, registrationDate, id);
-
-    if (result.changes === 0) {
+    const updated = await updateCustomer(id, name, phone, zalo, registrationDate);
+    if (!updated) {
       return NextResponse.json({ error: "Không tìm thấy khách hàng." }, { status: 404 });
     }
-
-    const updated = db
-      .prepare(
-        "SELECT id, name, phone, zalo, registration_date, created_at FROM customers WHERE id = ?",
-      )
-      .get(id) as CustomerRow;
-
-    return NextResponse.json(updated);
+    return NextResponse.json(updated as CustomerRow);
   } catch {
     return NextResponse.json(
       { error: "SĐT hoặc Zalo đã tồn tại trong hệ thống." },
@@ -70,18 +58,14 @@ export async function DELETE(
     return NextResponse.json({ error: "ID khách hàng không hợp lệ." }, { status: 400 });
   }
 
-  const linkedOrder = db
-    .prepare("SELECT id FROM orders WHERE customer_id = ? LIMIT 1")
-    .get(id) as { id: number } | undefined;
-  if (linkedOrder) {
+  const result = await deleteCustomerIfNoOrders(id);
+  if ("error" in result && result.error === "linked") {
     return NextResponse.json(
       { error: "Khách hàng đang có đơn hàng, không thể xóa." },
       { status: 409 },
     );
   }
-
-  const result = db.prepare("DELETE FROM customers WHERE id = ?").run(id);
-  if (result.changes === 0) {
+  if ("error" in result && result.error === "missing") {
     return NextResponse.json({ error: "Không tìm thấy khách hàng." }, { status: 404 });
   }
 

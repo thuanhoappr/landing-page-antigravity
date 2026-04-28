@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/brainDb";
+import { sepayIpnMarkPaid } from "@/lib/brainDb";
 
 export const runtime = "nodejs";
 
@@ -45,26 +45,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const updated = db.transaction(() => {
-      const order = db
-        .prepare(
-          "SELECT id, product_id, quantity, status FROM orders WHERE sepay_invoice = ?",
-        )
-        .get(invoice) as { id: number; product_id: number; quantity: number; status: string } | undefined;
-      if (!order) {
-        console.warn("[SePay IPN] No order for invoice", invoice);
-        return { matched: false as const };
-      }
-      if (order.status === "paid") {
-        return { matched: true as const, alreadyPaid: true };
-      }
-      db.prepare("UPDATE products SET quantity_remaining = quantity_remaining - ? WHERE id = ?").run(
-        order.quantity,
-        order.product_id,
-      );
-      db.prepare("UPDATE orders SET status = 'paid' WHERE id = ?").run(order.id);
-      return { matched: true as const, alreadyPaid: false };
-    })();
+    const updated = await sepayIpnMarkPaid(invoice);
 
     if (!updated.matched) {
       return NextResponse.json({ success: true, warning: "order_not_found" });

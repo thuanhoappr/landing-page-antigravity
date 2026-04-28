@@ -1,41 +1,13 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/brainDb";
+import { sepayCheckoutInsertPending } from "@/lib/brainDb";
 import { getBaseUrl, getCheckoutEndpoint, signSepayFields } from "@/lib/sepay";
 
 export const runtime = "nodejs";
-
-const SEPAY_PLACEHOLDER_PRODUCT = "Thanh toán khóa học (SePay)";
 
 function sanitizeAmount(input: unknown) {
   const n = Number(input);
   if (!Number.isFinite(n) || n < 2000) return 2000;
   return Math.round(n);
-}
-
-function resolveProductIdForCheckout(): number {
-  const envId = Number(process.env.SEPAY_PRODUCT_ID);
-  if (Number.isInteger(envId) && envId > 0) {
-    const row = db.prepare("SELECT id FROM products WHERE id = ?").get(envId) as { id: number } | undefined;
-    if (row) return row.id;
-  }
-  const first = db.prepare("SELECT id FROM products ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
-  if (first) return first.id;
-  const result = db
-    .prepare(
-      "INSERT INTO products (name, price, description, quantity_remaining) VALUES (?, 0, ?, 999999)",
-    )
-    .run(SEPAY_PLACEHOLDER_PRODUCT, "Đơn tạo từ trang thanh-toan / SePay");
-  return Number(result.lastInsertRowid);
-}
-
-function upsertCustomerId(name: string, phone: string): number {
-  const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(phone) as { id: number } | undefined;
-  if (existing) {
-    db.prepare("UPDATE customers SET name = ? WHERE id = ?").run(name, existing.id);
-    return existing.id;
-  }
-  const inserted = db.prepare("INSERT INTO customers (name, phone) VALUES (?, ?)").run(name, phone);
-  return Number(inserted.lastInsertRowid);
 }
 
 export async function POST(request: Request) {
@@ -61,13 +33,12 @@ export async function POST(request: Request) {
   const baseUrl = getBaseUrl();
 
   try {
-    db.transaction(() => {
-      const customerId = upsertCustomerId(customerName, customerPhone);
-      const productId = resolveProductIdForCheckout();
-      db.prepare(
-        "INSERT INTO orders (customer_id, product_id, quantity, amount, status, sepay_invoice) VALUES (?, ?, 1, ?, 'pending', ?)",
-      ).run(customerId, productId, amount, invoice);
-    })();
+    await sepayCheckoutInsertPending({
+      customerName,
+      customerPhone,
+      amount,
+      invoice,
+    });
 
     const fields = {
       order_amount: String(amount),

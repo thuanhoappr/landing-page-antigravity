@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, type ProductRow } from "@/lib/brainDb";
+import { deleteProductIfNoOrders, updateProduct, type ProductRow } from "@/lib/brainDb";
 
 export const runtime = "nodejs";
 
@@ -34,23 +34,12 @@ export async function PUT(
     return NextResponse.json({ error: "Số lượng tồn không hợp lệ." }, { status: 400 });
   }
 
-  const result = db
-    .prepare(
-      "UPDATE products SET name = ?, price = ?, description = ?, quantity_remaining = ? WHERE id = ?",
-    )
-    .run(name, price, description, quantityRemaining, id);
-
-  if (result.changes === 0) {
+  const updated = await updateProduct(id, name, price, description, quantityRemaining);
+  if (!updated) {
     return NextResponse.json({ error: "Không tìm thấy sản phẩm." }, { status: 404 });
   }
 
-  const updated = db
-    .prepare(
-      "SELECT id, name, price, description, quantity_remaining, created_at FROM products WHERE id = ?",
-    )
-    .get(id) as ProductRow;
-
-  return NextResponse.json(updated);
+  return NextResponse.json(updated as ProductRow);
 }
 
 export async function DELETE(
@@ -63,18 +52,14 @@ export async function DELETE(
     return NextResponse.json({ error: "ID sản phẩm không hợp lệ." }, { status: 400 });
   }
 
-  const linkedOrder = db
-    .prepare("SELECT id FROM orders WHERE product_id = ? LIMIT 1")
-    .get(id) as { id: number } | undefined;
-  if (linkedOrder) {
+  const result = await deleteProductIfNoOrders(id);
+  if ("error" in result && result.error === "linked") {
     return NextResponse.json(
       { error: "Sản phẩm đang có đơn hàng, không thể xóa." },
       { status: 409 },
     );
   }
-
-  const result = db.prepare("DELETE FROM products WHERE id = ?").run(id);
-  if (result.changes === 0) {
+  if ("error" in result && result.error === "missing") {
     return NextResponse.json({ error: "Không tìm thấy sản phẩm." }, { status: 404 });
   }
 

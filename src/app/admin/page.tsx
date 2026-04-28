@@ -1,4 +1,8 @@
-import { db } from "@/lib/brainDb";
+import {
+  listProductsAdmin,
+  listCustomersAdmin,
+  listOrdersAdmin,
+} from "@/lib/brainDb";
 import AdminPanelClient from "./AdminPanelClient";
 
 type Product = {
@@ -30,34 +34,17 @@ type Order = {
 };
 
 export default async function AdminPage() {
-  const products = db
-    .prepare(
-      "SELECT id, name, price, description, quantity_remaining FROM products ORDER BY id DESC",
-    )
-    .all() as Product[];
-  const customers = db
-    .prepare("SELECT id, name, phone, zalo, registration_date FROM customers ORDER BY id DESC")
-    .all() as Customer[];
-  const orders = db
-    .prepare(
-      `
-      SELECT
-        o.id,
-        o.customer_id,
-        c.name AS customer_name,
-        o.product_id,
-        p.name AS product_name,
-        o.quantity,
-        o.amount,
-        o.status,
-        o.purchase_date
-      FROM orders o
-      JOIN customers c ON c.id = o.customer_id
-      JOIN products p ON p.id = o.product_id
-      ORDER BY o.id DESC
-      `,
-    )
-    .all() as Order[];
+  const [products, customers, orders] = await Promise.all([
+    listProductsAdmin(),
+    listCustomersAdmin(),
+    listOrdersAdmin(),
+  ]);
 
-  return <AdminPanelClient initialProducts={products} initialCustomers={customers} initialOrders={orders} />;
+  return (
+    <AdminPanelClient
+      initialProducts={products as Product[]}
+      initialCustomers={customers as Customer[]}
+      initialOrders={orders as Order[]}
+    />
+  );
 }

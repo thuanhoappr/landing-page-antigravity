@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
-import { db, type ProductRow } from "@/lib/brainDb";
+import { insertProduct, listProductsApi, type ProductRow } from "@/lib/brainDb";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const rows = db
-    .prepare(
-      "SELECT id, name, price, description, quantity_remaining, created_at FROM products ORDER BY id DESC",
-    )
-    .all() as ProductRow[];
-
+  const rows = await listProductsApi();
   return NextResponse.json(rows);
 }
 
@@ -30,17 +25,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Số lượng tồn không hợp lệ." }, { status: 400 });
   }
 
-  const result = db
-    .prepare(
-      "INSERT INTO products (name, price, description, quantity_remaining) VALUES (?, ?, ?, ?)",
-    )
-    .run(name, price, description, quantityRemaining);
-
-  const created = db
-    .prepare(
-      "SELECT id, name, price, description, quantity_remaining, created_at FROM products WHERE id = ?",
-    )
-    .get(result.lastInsertRowid) as ProductRow;
-
-  return NextResponse.json(created, { status: 201 });
+  const created = await insertProduct(name, price, description, quantityRemaining);
+  return NextResponse.json(created as ProductRow, { status: 201 });
 }
