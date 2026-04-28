@@ -1,0 +1,19 @@
+Bài đăng - Ngày 10: Vừa chốt xong hệ thống bán hàng hoàn chỉnh
+
+Hôm nay mình muốn chia sẻ một tin rất vui:
+Mình vừa hoàn thiện xong hệ thống bán hàng chạy mượt trong 1 chỗ.
+
+Giờ khách chỉ cần vào website là có thể:
+- Thanh toán tự động qua QR
+- Hệ thống tự ghi nhận đơn hàng
+- Quản lý khách hàng tập trung, không còn mỗi nơi một ít
+
+Cảm giác "đỡ rối não" thật sự luôn.
+Trước đây phải nhảy qua lại giữa nhiều công cụ, còn bây giờ mọi thứ gọn hơn rất nhiều: có đơn, có dữ liệu, có lịch sử, nhìn một chỗ là nắm được ngay.
+
+Mình đang tiếp tục tối ưu để trải nghiệm mua hàng nhanh hơn nữa, nhưng bản hiện tại đã đủ tốt để chạy thật và nhận tiền tự động rồi.
+
+Ai muốn vào xem thử hệ thống mình đang chạy:
+👉 https://pickleball30phut.com
+
+Đi từng ngày một, nhưng hôm nay đúng là một cột mốc rất đáng nhớ.
