@@ -47,6 +47,16 @@ export type OrderView = {
   created_at: string;
 };
 
+export type EmailJob = {
+  id: number;
+  customer_id: number;
+  email: string;
+  step: number;
+  subject: string;
+  body: string;
+  send_at: string;
+};
+
 function getPostgresConnectionString() {
   return (
     process.env.POSTGRES_URL?.trim() ||
@@ -110,6 +120,19 @@ async function ensurePgSchema() {
     )
   `;
   await sql`
+    CREATE TABLE IF NOT EXISTS email_automation_jobs (
+      id SERIAL PRIMARY KEY,
+      customer_id INTEGER NOT NULL REFERENCES customers(id),
+      email TEXT NOT NULL,
+      step INTEGER NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      send_at TIMESTAMPTZ NOT NULL,
+      sent_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+  await sql`
     CREATE UNIQUE INDEX IF NOT EXISTS ux_customers_phone
     ON customers(phone) WHERE phone IS NOT NULL
   `;
@@ -124,6 +147,10 @@ async function ensurePgSchema() {
   await sql`
     CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_sepay_invoice
     ON orders(sepay_invoice) WHERE sepay_invoice IS NOT NULL
+  `;
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_email_jobs_customer_step
+    ON email_automation_jobs(customer_id, step)
   `;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS sepay_invoice TEXT`;
@@ -227,6 +254,19 @@ function initSqliteSchema(db: Database.Database) {
       FOREIGN KEY(customer_id) REFERENCES customers(id),
       FOREIGN KEY(product_id) REFERENCES products(id)
     );
+    
+    CREATE TABLE IF NOT EXISTS email_automation_jobs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      step INTEGER NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      send_at TEXT NOT NULL,
+      sent_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY(customer_id) REFERENCES customers(id)
+    );
   `);
   if (!hasColumn(db, "orders", "quantity")) {
     tryExecIgnoringDuplicateColumn(db, "ALTER TABLE orders ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1");
@@ -241,6 +281,7 @@ function initSqliteSchema(db: Database.Database) {
     tryExecIgnoringDuplicateColumn(db, "ALTER TABLE customers ADD COLUMN email TEXT");
   }
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS ux_customers_email ON customers(email) WHERE email IS NOT NULL");
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS ux_email_jobs_customer_step ON email_automation_jobs(customer_id, step)");
   db.exec(`
     CREATE TABLE IF NOT EXISTS sepay_webhook_processed (
       external_id TEXT PRIMARY KEY
@@ -565,6 +606,110 @@ export async function deleteCustomerIfNoOrders(
   const result = db.prepare("DELETE FROM customers WHERE id = ?").run(id);
   if (result.changes === 0) return { error: "missing" };
   return { ok: true };
+}
+
+export async function findCustomerByPhoneOrEmail(params: {
+  phone?: string | null;
+  email?: string | null;
+}): Promise<{ id: number } | null> {
+  await ensurePg();
+  const phone = params.phone?.trim() || null;
+  const email = params.email?.trim() || null;
+  if (!phone && !email) return null;
+
+  if (usePostgres) {
+    const sql = getPg()!;
+    const rows = await sql`
+      SELECT id FROM customers
+      WHERE (${phone}::text IS NOT NULL AND phone = ${phone})
+         OR (${email}::text IS NOT NULL AND email = ${email})
+      ORDER BY id DESC
+      LIMIT 1
+    `;
+    if (!rows.length) return null;
+    return { id: Number((rows[0] as { id: number }).id) };
+  }
+
+  const db = getSqliteOrThrow();
+  const row = db
+    .prepare(
+      `SELECT id FROM customers
+       WHERE (? IS NOT NULL AND phone = ?)
+          OR (? IS NOT NULL AND email = ?)
+       ORDER BY id DESC LIMIT 1`,
+    )
+    .get(phone, phone, email, email) as { id: number } | undefined;
+  return row ? { id: row.id } : null;
+}
+
+export async function enqueueEmailAutomationJob(params: {
+  customer_id: number;
+  email: string;
+  step: number;
+  subject: string;
+  body: string;
+  send_at: string;
+}): Promise<void> {
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    await sql`
+      INSERT INTO email_automation_jobs (customer_id, email, step, subject, body, send_at)
+      VALUES (${params.customer_id}, ${params.email}, ${params.step}, ${params.subject}, ${params.body}, ${params.send_at}::timestamptz)
+      ON CONFLICT (customer_id, step) DO UPDATE
+      SET email = EXCLUDED.email,
+          subject = EXCLUDED.subject,
+          body = EXCLUDED.body,
+          send_at = EXCLUDED.send_at
+    `;
+    return;
+  }
+  const db = getSqliteOrThrow();
+  db.prepare(
+    `INSERT INTO email_automation_jobs (customer_id, email, step, subject, body, send_at)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(customer_id, step) DO UPDATE SET
+       email=excluded.email,
+       subject=excluded.subject,
+       body=excluded.body,
+       send_at=excluded.send_at`,
+  ).run(params.customer_id, params.email, params.step, params.subject, params.body, params.send_at);
+}
+
+export async function getDueEmailAutomationJobs(limit = 30): Promise<EmailJob[]> {
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    const rows = await sql`
+      SELECT id, customer_id, email, step, subject, body, send_at
+      FROM email_automation_jobs
+      WHERE sent_at IS NULL AND send_at <= NOW()
+      ORDER BY send_at ASC
+      LIMIT ${limit}
+    `;
+    return rows as unknown as EmailJob[];
+  }
+  const db = getSqliteOrThrow();
+  return db
+    .prepare(
+      `SELECT id, customer_id, email, step, subject, body, send_at
+       FROM email_automation_jobs
+       WHERE sent_at IS NULL AND datetime(send_at) <= datetime('now')
+       ORDER BY datetime(send_at) ASC
+       LIMIT ?`,
+    )
+    .all(limit) as EmailJob[];
+}
+
+export async function markEmailAutomationJobSent(id: number): Promise<void> {
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    await sql`UPDATE email_automation_jobs SET sent_at = NOW() WHERE id = ${id}`;
+    return;
+  }
+  const db = getSqliteOrThrow();
+  db.prepare("UPDATE email_automation_jobs SET sent_at = datetime('now') WHERE id = ?").run(id);
 }
 
 const orderSelectSql = `

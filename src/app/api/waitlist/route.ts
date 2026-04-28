@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
-import { insertCustomer } from "@/lib/brainDb";
-import { sendWelcomeLeadEmail } from "@/lib/resend";
+import {
+  enqueueEmailAutomationJob,
+  findCustomerByPhoneOrEmail,
+  getDueEmailAutomationJobs,
+  insertCustomer,
+  markEmailAutomationJobSent,
+} from "@/lib/brainDb";
+import { loadEmailSequence } from "@/lib/emailSequence";
+import { sendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 
@@ -24,24 +31,49 @@ export async function POST(request: Request) {
   }
 
   try {
-    const customer = await insertCustomer(name, email, phone, null, registrationDate);
+    let customerId: number;
+    try {
+      const customer = await insertCustomer(name, email, phone, null, registrationDate);
+      customerId = customer.id;
+    } catch {
+      const existing = await findCustomerByPhoneOrEmail({ phone, email });
+      if (!existing) throw new Error("CUSTOMER_NOT_FOUND");
+      customerId = existing.id;
+    }
+
     if (email) {
-      try {
-        await sendWelcomeLeadEmail({ to: email, name });
-      } catch (e) {
-        console.error("[waitlist] send welcome email failed", e);
+      const seq = loadEmailSequence();
+      const isTestMode = /\+test@/i.test(email);
+      const now = Date.now();
+      const offsets = isTestMode ? [0, 0, 0] : [0, 2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
+
+      for (let i = 0; i < seq.length; i += 1) {
+        const step = seq[i];
+        await enqueueEmailAutomationJob({
+          customer_id: customerId,
+          email,
+          step: step.step,
+          subject: step.subject,
+          body: step.body.replace(/Chao ban/gi, `Chao ${name || "ban"}`),
+          send_at: new Date(now + offsets[i]).toISOString(),
+        });
+      }
+
+      // gửi ngay các job đến hạn (đặc biệt cho +test sẽ gửi đủ 3 email tức thì)
+      const due = await getDueEmailAutomationJobs(20);
+      for (const job of due) {
+        try {
+          await sendEmail({ to: job.email, subject: job.subject, text: job.body });
+          await markEmailAutomationJobSent(job.id);
+        } catch (e) {
+          console.error("[waitlist] send automation email failed", e);
+        }
       }
     }
-    return NextResponse.json({ success: true, customer_id: customer.id }, { status: 201 });
-  } catch {
-    // Dữ liệu có thể đã tồn tại (phone/email), vẫn cho flow tiếp tục.
-    if (email) {
-      try {
-        await sendWelcomeLeadEmail({ to: email, name });
-      } catch (e) {
-        console.error("[waitlist] send welcome email failed on duplicate", e);
-      }
-    }
-    return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
+
+    return NextResponse.json({ success: true, customer_id: customerId }, { status: 201 });
+  } catch (e) {
+    console.error("[waitlist] error", e);
+    return NextResponse.json({ error: "Khong xu ly duoc waitlist." }, { status: 500 });
   }
 }
