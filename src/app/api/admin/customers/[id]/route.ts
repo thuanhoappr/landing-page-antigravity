@@ -20,6 +20,7 @@ export async function PUT(
 
   const body = await request.json().catch(() => ({}));
   const name = String(body.name ?? "").trim();
+  const email = String(body.email ?? "").trim() || null;
   const phone = String(body.phone ?? "").trim() || null;
   const zalo = String(body.zalo ?? "").trim() || null;
   const registrationDate = String(body.registration_date ?? "").trim();
@@ -35,14 +36,14 @@ export async function PUT(
   }
 
   try {
-    const updated = await updateCustomer(id, name, phone, zalo, registrationDate);
+    const updated = await updateCustomer(id, name, email, phone, zalo, registrationDate);
     if (!updated) {
       return NextResponse.json({ error: "Không tìm thấy khách hàng." }, { status: 404 });
     }
     return NextResponse.json(updated as CustomerRow);
   } catch {
     return NextResponse.json(
-      { error: "SĐT hoặc Zalo đã tồn tại trong hệ thống." },
+      { error: "Email, SĐT hoặc Zalo đã tồn tại trong hệ thống." },
       { status: 409 },
     );
   }

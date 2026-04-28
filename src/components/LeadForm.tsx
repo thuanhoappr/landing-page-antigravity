@@ -38,8 +38,34 @@ export default function LeadForm() {
       setError("Vui lòng nhập số điện thoại / Zalo hợp lệ.");
       return;
     }
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Email chưa đúng định dạng.");
+      return;
+    }
 
     setIsSubmitting(true);
+
+    try {
+      // Ghi lead vào CRM nội bộ trước (brain.db / Postgres) để admin thấy ngay.
+      const crmRes = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim(),
+        }),
+      });
+      if (!crmRes.ok) {
+        const data = await crmRes.json().catch(() => ({}));
+        throw new Error(data?.error || "Không lưu được CRM.");
+      }
+    } catch (err) {
+      console.error("[LeadForm] CRM error:", err);
+      setError("Không lưu được thông tin vào CRM. Vui lòng thử lại.");
+      setIsSubmitting(false);
+      return;
+    }
 
     const finalGoal = goal === "Khác" ? customGoal.trim() : goal;
     if (goal === "Khác" && !finalGoal) {

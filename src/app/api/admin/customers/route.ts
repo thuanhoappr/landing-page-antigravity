@@ -11,6 +11,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const name = String(body.name ?? "").trim();
+  const email = String(body.email ?? "").trim() || null;
   const phone = String(body.phone ?? "").trim() || null;
   const zalo = String(body.zalo ?? "").trim() || null;
   const registrationDate =
@@ -24,11 +25,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const created = await insertCustomer(name, phone, zalo, registrationDate);
+    const created = await insertCustomer(name, email, phone, zalo, registrationDate);
     return NextResponse.json(created as CustomerRow, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "SĐT hoặc Zalo đã tồn tại trong hệ thống." },
+      { error: "Email, SĐT hoặc Zalo đã tồn tại trong hệ thống." },
       { status: 409 },
     );
   }

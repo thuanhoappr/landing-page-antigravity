@@ -15,6 +15,7 @@ export type ProductRow = {
 export type CustomerRow = {
   id: number;
   name: string;
+  email: string | null;
   phone: string | null;
   zalo: string | null;
   registration_date: string;
@@ -86,6 +87,7 @@ async function ensurePgSchema() {
     CREATE TABLE IF NOT EXISTS customers (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
+      email TEXT,
       phone TEXT,
       zalo TEXT,
       registration_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -115,11 +117,16 @@ async function ensurePgSchema() {
     ON customers(zalo) WHERE zalo IS NOT NULL
   `;
   await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_customers_email
+    ON customers(email) WHERE email IS NOT NULL
+  `;
+  await sql`
     CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_sepay_invoice
     ON orders(sepay_invoice) WHERE sepay_invoice IS NOT NULL
   `;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS sepay_invoice TEXT`;
+  await sql`ALTER TABLE customers ADD COLUMN IF NOT EXISTS email TEXT`;
   await sql`
     CREATE TABLE IF NOT EXISTS sepay_webhook_processed (
       external_id TEXT PRIMARY KEY
@@ -194,6 +201,7 @@ function initSqliteSchema(db: Database.Database) {
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      email TEXT,
       phone TEXT,
       zalo TEXT,
       registration_date TEXT NOT NULL DEFAULT (datetime('now')),
@@ -228,6 +236,10 @@ function initSqliteSchema(db: Database.Database) {
       "CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_sepay_invoice ON orders(sepay_invoice) WHERE sepay_invoice IS NOT NULL",
     );
   }
+  if (!hasColumn(db, "customers", "email")) {
+    tryExecIgnoringDuplicateColumn(db, "ALTER TABLE customers ADD COLUMN email TEXT");
+  }
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS ux_customers_email ON customers(email) WHERE email IS NOT NULL");
   db.exec(`
     CREATE TABLE IF NOT EXISTS sepay_webhook_processed (
       external_id TEXT PRIMARY KEY
@@ -278,12 +290,13 @@ export async function listCustomersAdmin() {
   if (usePostgres) {
     const sql = getPg()!;
     return sql`
-      SELECT id, name, phone, zalo, registration_date
+      SELECT id, name, email, phone, zalo, registration_date
       FROM customers ORDER BY id DESC
     ` as Promise<
       Array<{
         id: number;
         name: string;
+        email: string | null;
         phone: string | null;
         zalo: string | null;
         registration_date: string;
@@ -292,10 +305,11 @@ export async function listCustomersAdmin() {
   }
   const db = getSqliteOrThrow();
   return db
-    .prepare("SELECT id, name, phone, zalo, registration_date FROM customers ORDER BY id DESC")
+    .prepare("SELECT id, name, email, phone, zalo, registration_date FROM customers ORDER BY id DESC")
     .all() as Array<{
     id: number;
     name: string;
+    email: string | null;
     phone: string | null;
     zalo: string | null;
     registration_date: string;
@@ -463,19 +477,20 @@ export async function listCustomersApi(): Promise<CustomerRow[]> {
   if (usePostgres) {
     const sql = getPg()!;
     const rows = await sql`
-      SELECT id, name, phone, zalo, registration_date, created_at
+      SELECT id, name, email, phone, zalo, registration_date, created_at
       FROM customers ORDER BY id DESC
     `;
     return rows as unknown as CustomerRow[];
   }
   const db = getSqliteOrThrow();
   return db
-    .prepare("SELECT id, name, phone, zalo, registration_date, created_at FROM customers ORDER BY id DESC")
+    .prepare("SELECT id, name, email, phone, zalo, registration_date, created_at FROM customers ORDER BY id DESC")
     .all() as CustomerRow[];
 }
 
 export async function insertCustomer(
   name: string,
+  email: string | null,
   phone: string | null,
   zalo: string | null,
   registrationDate: string,
@@ -484,24 +499,25 @@ export async function insertCustomer(
   if (usePostgres) {
     const sql = getPg()!;
     const [row] = await sql`
-      INSERT INTO customers (name, phone, zalo, registration_date)
-      VALUES (${name}, ${phone}, ${zalo}, ${registrationDate}::timestamptz)
-      RETURNING id, name, phone, zalo, registration_date, created_at
+      INSERT INTO customers (name, email, phone, zalo, registration_date)
+      VALUES (${name}, ${email}, ${phone}, ${zalo}, ${registrationDate}::timestamptz)
+      RETURNING id, name, email, phone, zalo, registration_date, created_at
     `;
     return row as unknown as CustomerRow;
   }
   const db = getSqliteOrThrow();
   const r = db
-    .prepare("INSERT INTO customers (name, phone, zalo, registration_date) VALUES (?, ?, ?, ?)")
-    .run(name, phone, zalo, registrationDate);
+    .prepare("INSERT INTO customers (name, email, phone, zalo, registration_date) VALUES (?, ?, ?, ?, ?)")
+    .run(name, email, phone, zalo, registrationDate);
   return db
-    .prepare("SELECT id, name, phone, zalo, registration_date, created_at FROM customers WHERE id = ?")
+    .prepare("SELECT id, name, email, phone, zalo, registration_date, created_at FROM customers WHERE id = ?")
     .get(r.lastInsertRowid) as CustomerRow;
 }
 
 export async function updateCustomer(
   id: number,
   name: string,
+  email: string | null,
   phone: string | null,
   zalo: string | null,
   registrationDate: string,
@@ -510,21 +526,21 @@ export async function updateCustomer(
   if (usePostgres) {
     const sql = getPg()!;
     const rows = await sql`
-      UPDATE customers SET name = ${name}, phone = ${phone}, zalo = ${zalo},
+      UPDATE customers SET name = ${name}, email = ${email}, phone = ${phone}, zalo = ${zalo},
         registration_date = ${registrationDate}::timestamptz WHERE id = ${id}
-      RETURNING id, name, phone, zalo, registration_date, created_at
+      RETURNING id, name, email, phone, zalo, registration_date, created_at
     `;
     return (rows[0] as unknown as CustomerRow) ?? null;
   }
   const db = getSqliteOrThrow();
   const result = db
     .prepare(
-      "UPDATE customers SET name = ?, phone = ?, zalo = ?, registration_date = ? WHERE id = ?",
+      "UPDATE customers SET name = ?, email = ?, phone = ?, zalo = ?, registration_date = ? WHERE id = ?",
     )
-    .run(name, phone, zalo, registrationDate, id);
+    .run(name, email, phone, zalo, registrationDate, id);
   if (result.changes === 0) return null;
   return db
-    .prepare("SELECT id, name, phone, zalo, registration_date, created_at FROM customers WHERE id = ?")
+    .prepare("SELECT id, name, email, phone, zalo, registration_date, created_at FROM customers WHERE id = ?")
     .get(id) as CustomerRow;
 }
 

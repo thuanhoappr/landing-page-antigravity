@@ -19,6 +19,7 @@ type Product = {
 type Customer = {
   id: number;
   name: string;
+  email: string | null;
   phone: string | null;
   zalo: string | null;
   registration_date: string;

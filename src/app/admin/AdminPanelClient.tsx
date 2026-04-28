@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type TabKey = "products" | "customers" | "orders";
 type Product = { id: number; name: string; price: number; description: string | null; quantity_remaining: number };
-type Customer = { id: number; name: string; phone: string | null; zalo: string | null; registration_date: string };
+type Customer = { id: number; name: string; email: string | null; phone: string | null; zalo: string | null; registration_date: string };
 type Order = {
   id: number;
   customer_id: number;
@@ -47,7 +47,7 @@ export default function AdminPanelClient({
   const [error, setError] = useState<string | null>(null);
 
   const [productForm, setProductForm] = useState({ id: 0, name: "", price: "0", description: "", quantity_remaining: "0" });
-  const [customerForm, setCustomerForm] = useState({ id: 0, name: "", phone: "", zalo: "", registration_date: "" });
+  const [customerForm, setCustomerForm] = useState({ id: 0, name: "", email: "", phone: "", zalo: "", registration_date: "" });
   const [orderForm, setOrderForm] = useState({
     id: 0,
     customer_id: "",
@@ -123,12 +123,13 @@ export default function AdminPanelClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: customerForm.name,
+          email: customerForm.email || null,
           phone: customerForm.phone,
           zalo: customerForm.zalo,
           registration_date: customerForm.registration_date || new Date().toISOString(),
         }),
       });
-      setCustomerForm({ id: 0, name: "", phone: "", zalo: "", registration_date: "" });
+      setCustomerForm({ id: 0, name: "", email: "", phone: "", zalo: "", registration_date: "" });
       await loadAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không lưu được khách hàng.");
@@ -235,23 +236,24 @@ export default function AdminPanelClient({
           <section className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-900 p-4 rounded-xl">
               <input className="px-3 py-2 rounded bg-slate-800" placeholder="Tên khách hàng" value={customerForm.name} onChange={(e) => setCustomerForm((s) => ({ ...s, name: e.target.value }))} />
+              <input className="px-3 py-2 rounded bg-slate-800" placeholder="Email" value={customerForm.email} onChange={(e) => setCustomerForm((s) => ({ ...s, email: e.target.value }))} />
               <input className="px-3 py-2 rounded bg-slate-800" placeholder="Số điện thoại" value={customerForm.phone} onChange={(e) => setCustomerForm((s) => ({ ...s, phone: e.target.value }))} />
               <input className="px-3 py-2 rounded bg-slate-800" placeholder="Zalo" value={customerForm.zalo} onChange={(e) => setCustomerForm((s) => ({ ...s, zalo: e.target.value }))} />
               <input className="px-3 py-2 rounded bg-slate-800" type="datetime-local" value={customerForm.registration_date} onChange={(e) => setCustomerForm((s) => ({ ...s, registration_date: e.target.value }))} />
               <div className="md:col-span-2 flex gap-2">
                 <button className="px-4 py-2 rounded bg-emerald-600" onClick={() => void saveCustomer()}>{isEditingCustomer ? "Cập nhật" : "Thêm mới"}</button>
-                {isEditingCustomer && <button className="px-4 py-2 rounded bg-slate-700" onClick={() => setCustomerForm({ id: 0, name: "", phone: "", zalo: "", registration_date: "" })}>Hủy sửa</button>}
+                {isEditingCustomer && <button className="px-4 py-2 rounded bg-slate-700" onClick={() => setCustomerForm({ id: 0, name: "", email: "", phone: "", zalo: "", registration_date: "" })}>Hủy sửa</button>}
               </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-left border-b border-slate-700"><th className="py-2">Tên</th><th>SĐT</th><th>Zalo</th><th>Ngày đăng ký</th><th>Thao tác</th></tr></thead>
+                <thead><tr className="text-left border-b border-slate-700"><th className="py-2">Tên</th><th>Email</th><th>SĐT</th><th>Zalo</th><th>Ngày đăng ký</th><th>Thao tác</th></tr></thead>
                 <tbody>
                   {customers.map((item) => (
                     <tr key={item.id} className="border-b border-slate-800">
-                      <td className="py-2">{item.name}</td><td>{item.phone || "-"}</td><td>{item.zalo || "-"}</td><td>{new Date(item.registration_date).toLocaleString("vi-VN")}</td>
+                      <td className="py-2">{item.name}</td><td>{item.email || "-"}</td><td>{item.phone || "-"}</td><td>{item.zalo || "-"}</td><td>{new Date(item.registration_date).toLocaleString("vi-VN")}</td>
                       <td className="space-x-2">
-                        <button className="px-2 py-1 rounded bg-amber-600" onClick={() => setCustomerForm({ id: item.id, name: item.name, phone: item.phone || "", zalo: item.zalo || "", registration_date: item.registration_date.slice(0, 16) })}>Sửa</button>
+                        <button className="px-2 py-1 rounded bg-amber-600" onClick={() => setCustomerForm({ id: item.id, name: item.name, email: item.email || "", phone: item.phone || "", zalo: item.zalo || "", registration_date: item.registration_date.slice(0, 16) })}>Sửa</button>
                         <button className="px-2 py-1 rounded bg-rose-700" onClick={() => void deleteById("customers", item.id)}>Xóa</button>
                       </td>
                     </tr>
