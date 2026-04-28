@@ -95,6 +95,7 @@ async function ensurePgSchema() {
       CHECK (phone IS NOT NULL OR zalo IS NOT NULL)
     )
   `;
+  await sql`ALTER TABLE customers ADD COLUMN IF NOT EXISTS email TEXT`;
   await sql`
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
