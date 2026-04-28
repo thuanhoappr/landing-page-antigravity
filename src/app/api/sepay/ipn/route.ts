@@ -38,8 +38,13 @@ function getSecretFromRequest(request: Request) {
 function getApiKeyFromAuthorization(request: Request) {
   const raw = request.headers.get("Authorization") ?? request.headers.get("authorization");
   if (!raw) return null;
-  const m = raw.match(/^Apikey\s+(.+)$/i);
-  return m ? m[1].trim() : null;
+  const text = raw.trim();
+  // SePay/Integration có thể dùng nhiều prefix khác nhau: Apikey, APIKEY, Api_Key...
+  const withPrefix = text.match(/^(apikey|api_key|api-key|bearer)\s+(.+)$/i);
+  if (withPrefix) return withPrefix[2].trim();
+  // fallback: nếu chỉ gửi token thuần trong Authorization
+  if (!text.includes(" ")) return text;
+  return null;
 }
 
 function verifySeapyAuth(request: Request): boolean {
