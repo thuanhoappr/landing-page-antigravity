@@ -1185,10 +1185,11 @@ export async function sepayProcessBankIncomeWebhook(payload: {
   }
 
   const first = await consumeSeapyWebhookOnce(extId);
-  if (!first) {
-    return { handled: true, duplicate: true, matched: true };
-  }
-
   const result = await sepayIpnMarkPaid(invoice);
-  return { handled: true, matched: result.matched };
+  // Duplicate webhook vẫn thử markPaid để hồi phục case bản cũ đã ghi id quá sớm.
+  return {
+    handled: true,
+    duplicate: !first,
+    matched: result.matched || result.alreadyPaid === true,
+  };
 }
