@@ -1079,33 +1079,73 @@ export function extractPbInvoiceFromText(text: string): string | null {
   return m ? m[0] : null;
 }
 
-async function findUniquePendingInvoiceByAmount(amountVnd: number): Promise<string | null> {
+function parseSePayTransactionDate(input?: string | null): Date | null {
+  if (!input) return null;
+  const text = String(input).trim();
+  if (!text) return null;
+  // SePay bank webhook thường dùng định dạng "YYYY-MM-DD HH:mm:ss"
+  const isoLike = text.replace(" ", "T");
+  const d = new Date(isoLike);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+async function findBestPendingInvoiceByAmount(
+  amountVnd: number,
+  transactionDate?: string | null,
+): Promise<string | null> {
   await ensurePg();
+  const txDate = parseSePayTransactionDate(transactionDate);
   if (usePostgres) {
     const sql = getPg()!;
     const rows = await sql`
-      SELECT sepay_invoice FROM orders
+      SELECT sepay_invoice, created_at FROM orders
       WHERE status = 'pending'
         AND sepay_invoice IS NOT NULL
         AND amount = ${amountVnd}
-        AND created_at > NOW() - INTERVAL '7 days'
+        AND created_at > NOW() - INTERVAL '1 days'
       ORDER BY id DESC
-      LIMIT 2
+      LIMIT 20
     `;
-    if (rows.length !== 1) return null;
-    return String((rows[0] as { sepay_invoice: string }).sepay_invoice);
+    if (!rows.length) return null;
+    if (rows.length === 1) return String((rows[0] as { sepay_invoice: string }).sepay_invoice);
+    if (!txDate) return null;
+    const txMs = txDate.getTime();
+    let best: { invoice: string; score: number } | null = null;
+    for (const r of rows as unknown as Array<{ sepay_invoice: string; created_at: string }>) {
+      const created = new Date(r.created_at);
+      const createdMs = created.getTime();
+      if (Number.isNaN(createdMs)) continue;
+      const score = Math.abs(txMs - createdMs);
+      if (!best || score < best.score) {
+        best = { invoice: String(r.sepay_invoice), score };
+      }
+    }
+    return best?.invoice ?? null;
   }
   const db = getSqliteOrThrow();
   const rows = db
     .prepare(
-      `SELECT sepay_invoice FROM orders
+      `SELECT sepay_invoice, created_at FROM orders
        WHERE status = 'pending' AND sepay_invoice IS NOT NULL AND amount = ?
-         AND datetime(created_at) > datetime('now', '-7 days')
-       ORDER BY id DESC LIMIT 2`,
+         AND datetime(created_at) > datetime('now', '-1 days')
+       ORDER BY id DESC LIMIT 20`,
     )
-    .all(amountVnd) as { sepay_invoice: string }[];
-  if (rows.length !== 1) return null;
-  return rows[0].sepay_invoice;
+    .all(amountVnd) as { sepay_invoice: string; created_at: string }[];
+  if (!rows.length) return null;
+  if (rows.length === 1) return rows[0].sepay_invoice;
+  if (!txDate) return null;
+  const txMs = txDate.getTime();
+  let best: { invoice: string; score: number } | null = null;
+  for (const row of rows) {
+    const created = new Date(row.created_at);
+    const createdMs = created.getTime();
+    if (Number.isNaN(createdMs)) continue;
+    const score = Math.abs(txMs - createdMs);
+    if (!best || score < best.score) {
+      best = { invoice: row.sepay_invoice, score };
+    }
+  }
+  return best?.invoice ?? null;
 }
 
 /**
@@ -1114,6 +1154,7 @@ async function findUniquePendingInvoiceByAmount(amountVnd: number): Promise<stri
  */
 export async function sepayProcessBankIncomeWebhook(payload: {
   id?: number;
+  transactionDate?: string | null;
   transferType?: string;
   transferAmount?: number;
   code?: string | null;
@@ -1133,18 +1174,19 @@ export async function sepayProcessBankIncomeWebhook(payload: {
     payload.id != null && Number.isFinite(Number(payload.id)) && Number(payload.id) > 0
       ? `bank:${payload.id}`
       : `bank:${amt}:${String(payload.content ?? "")}:${String(payload.referenceCode ?? "")}`;
-  const first = await consumeSeapyWebhookOnce(extId);
-  if (!first) {
-    return { handled: true, duplicate: true, matched: true };
-  }
 
   const text = concatBankText(payload);
   let invoice = extractPbInvoiceFromText(text);
   if (!invoice) {
-    invoice = await findUniquePendingInvoiceByAmount(Math.round(amt));
+    invoice = await findBestPendingInvoiceByAmount(Math.round(amt), payload.transactionDate);
   }
   if (!invoice) {
     return { handled: true, matched: false };
+  }
+
+  const first = await consumeSeapyWebhookOnce(extId);
+  if (!first) {
+    return { handled: true, duplicate: true, matched: true };
   }
 
   const result = await sepayIpnMarkPaid(invoice);
