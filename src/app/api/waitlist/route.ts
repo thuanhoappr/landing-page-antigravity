@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { insertCustomer } from "@/lib/brainDb";
+import { sendWelcomeLeadEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 
@@ -24,9 +25,23 @@ export async function POST(request: Request) {
 
   try {
     const customer = await insertCustomer(name, email, phone, null, registrationDate);
+    if (email) {
+      try {
+        await sendWelcomeLeadEmail({ to: email, name });
+      } catch (e) {
+        console.error("[waitlist] send welcome email failed", e);
+      }
+    }
     return NextResponse.json({ success: true, customer_id: customer.id }, { status: 201 });
   } catch {
     // Dữ liệu có thể đã tồn tại (phone/email), vẫn cho flow tiếp tục.
+    if (email) {
+      try {
+        await sendWelcomeLeadEmail({ to: email, name });
+      } catch (e) {
+        console.error("[waitlist] send welcome email failed on duplicate", e);
+      }
+    }
     return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
   }
 }
