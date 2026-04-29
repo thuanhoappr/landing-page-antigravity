@@ -53,12 +53,16 @@ export async function POST(request: Request) {
           // Test mode: gui ca 3 email ngay lap tuc de kiem tra nhanh.
           for (const step of steps) {
             const result = await sendEmail({ to: email, subject: step.subject, text: step.body });
-            if (!result.sent) throw new Error(`SEND_EMAIL_FAILED:${result.reason}`);
+            if (!result.sent) {
+              console.error("[waitlist] test send failed", { to: email, step: step.step, reason: result.reason });
+            }
           }
         } else {
           // Production: gui email 1 ngay, email 2/3 dua vao hang doi cron.
           const first = await sendEmail({ to: email, subject: steps[0].subject, text: steps[0].body });
-          if (!first.sent) throw new Error(`SEND_EMAIL_FAILED:${first.reason}`);
+          if (!first.sent) {
+            console.error("[waitlist] first email send failed", { to: email, reason: first.reason });
+          }
           const futureOffsets = [2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
           for (let i = 1; i < steps.length; i += 1) {
             const step = steps[i];
@@ -73,13 +77,7 @@ export async function POST(request: Request) {
           }
         }
       } catch (e) {
-        // Test mode: tra loi loi ro rang de debug nhanh trong SOP.
-        if (isTestMode) {
-          const detail = e instanceof Error ? e.message : String(e);
-          console.error("[waitlist] test mode email error", detail);
-          return NextResponse.json({ error: "TEST_EMAIL_FAILED", detail }, { status: 500 });
-        }
-        // Production mode: khong chan luu CRM neu sequence/email gap loi.
+        // Khong chan luu CRM neu sequence/email gap loi.
         console.error("[waitlist] sequence/email error", e);
       }
     }
