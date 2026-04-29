@@ -4,6 +4,11 @@ import { sendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
 
+function normalizeOrderEmail(email: string): string {
+  // Test alias: phucloctho+test20@gmail.com -> phucloctho@gmail.com
+  return email.replace(/\+test[^@]*(?=@)/i, "");
+}
+
 function orderConfirmationBody(order: OrderView): string {
   const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(order.amount);
   return [
@@ -82,11 +87,18 @@ export async function POST(request: Request) {
   try {
     const to = await getCustomerEmailById(order.customer_id);
     if (to) {
-      await sendEmail({
-        to,
+      const result = await sendEmail({
+        to: normalizeOrderEmail(to),
         subject: `Xác nhận đơn hàng #${order.id} — ${order.product_name}`,
         text: orderConfirmationBody(order),
       });
+      if (!result.sent) {
+        console.error("[admin/orders POST] order confirmation email not sent", {
+          customer_id: order.customer_id,
+          to,
+          reason: result.reason,
+        });
+      }
     }
   } catch (e) {
     console.error("[admin/orders POST] order confirmation email failed", e);
