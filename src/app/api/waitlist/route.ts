@@ -42,6 +42,7 @@ export async function POST(request: Request) {
 
     if (email) {
       const isTestMode = /\+test[^@]*@/i.test(email);
+      const normalizedTestEmail = isTestMode ? email.replace(/\+test[^@]*(?=@)/i, "") : email;
       try {
         const seq = loadEmailSequence();
         const now = Date.now();
@@ -53,10 +54,19 @@ export async function POST(request: Request) {
         if (isTestMode) {
           // Test mode: gui ca 3 email ngay lap tuc de kiem tra nhanh.
           for (const step of steps) {
-            const result = await sendEmail({ to: email, subject: step.subject, text: step.body });
-            testEmailDebug.push({ step: step.step, sent: result.sent, reason: result.sent ? undefined : result.reason });
+            const result = await sendEmail({ to: normalizedTestEmail, subject: step.subject, text: step.body });
+            testEmailDebug.push({
+              step: step.step,
+              sent: result.sent,
+              reason: result.sent ? undefined : result.reason,
+            });
             if (!result.sent) {
-              console.error("[waitlist] test send failed", { to: email, step: step.step, reason: result.reason });
+              console.error("[waitlist] test send failed", {
+                to: normalizedTestEmail,
+                original: email,
+                step: step.step,
+                reason: result.reason,
+              });
             }
           }
         } else {
