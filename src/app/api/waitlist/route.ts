@@ -40,10 +40,9 @@ export async function POST(request: Request) {
     }
 
     if (email) {
+      const isTestMode = /\+test[^@]*@/i.test(email);
       try {
         const seq = loadEmailSequence();
-        // Chap nhan +test, +test2, +test5... truoc @ de test nhanh.
-        const isTestMode = /\+test[^@]*@/i.test(email);
         const now = Date.now();
         const steps = seq.map((s) => ({
           ...s,
@@ -74,7 +73,13 @@ export async function POST(request: Request) {
           }
         }
       } catch (e) {
-        // Không chặn lưu CRM nếu sequence/email gặp lỗi.
+        // Test mode: tra loi loi ro rang de debug nhanh trong SOP.
+        if (isTestMode) {
+          const detail = e instanceof Error ? e.message : String(e);
+          console.error("[waitlist] test mode email error", detail);
+          return NextResponse.json({ error: "TEST_EMAIL_FAILED", detail }, { status: 500 });
+        }
+        // Production mode: khong chan luu CRM neu sequence/email gap loi.
         console.error("[waitlist] sequence/email error", e);
       }
     }
