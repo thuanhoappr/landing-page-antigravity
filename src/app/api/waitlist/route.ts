@@ -42,7 +42,8 @@ export async function POST(request: Request) {
     if (email) {
       try {
         const seq = loadEmailSequence();
-        const isTestMode = /\+test@/i.test(email);
+        // Chap nhan +test, +test2, +test5... truoc @ de test nhanh.
+        const isTestMode = /\+test[^@]*@/i.test(email);
         const now = Date.now();
         const steps = seq.map((s) => ({
           ...s,
@@ -52,11 +53,13 @@ export async function POST(request: Request) {
         if (isTestMode) {
           // Test mode: gui ca 3 email ngay lap tuc de kiem tra nhanh.
           for (const step of steps) {
-            await sendEmail({ to: email, subject: step.subject, text: step.body });
+            const result = await sendEmail({ to: email, subject: step.subject, text: step.body });
+            if (!result.sent) throw new Error(`SEND_EMAIL_FAILED:${result.reason}`);
           }
         } else {
           // Production: gui email 1 ngay, email 2/3 dua vao hang doi cron.
-          await sendEmail({ to: email, subject: steps[0].subject, text: steps[0].body });
+          const first = await sendEmail({ to: email, subject: steps[0].subject, text: steps[0].body });
+          if (!first.sent) throw new Error(`SEND_EMAIL_FAILED:${first.reason}`);
           const futureOffsets = [2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
           for (let i = 1; i < steps.length; i += 1) {
             const step = steps[i];
