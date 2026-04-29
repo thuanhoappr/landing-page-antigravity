@@ -30,6 +30,7 @@ export async function POST(request: Request) {
 
   try {
     let customerId: number;
+    let testEmailDebug: Array<{ step: number; sent: boolean; reason?: string }> = [];
     try {
       const customer = await insertCustomer(name, email, phone, null, registrationDate);
       customerId = customer.id;
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
           // Test mode: gui ca 3 email ngay lap tuc de kiem tra nhanh.
           for (const step of steps) {
             const result = await sendEmail({ to: email, subject: step.subject, text: step.body });
+            testEmailDebug.push({ step: step.step, sent: result.sent, reason: result.sent ? undefined : result.reason });
             if (!result.sent) {
               console.error("[waitlist] test send failed", { to: email, step: step.step, reason: result.reason });
             }
@@ -82,7 +84,15 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, customer_id: customerId }, { status: 201 });
+    const isTestMode = email ? /\+test[^@]*@/i.test(email) : false;
+    return NextResponse.json(
+      {
+        success: true,
+        customer_id: customerId,
+        ...(isTestMode ? { test_email_debug: testEmailDebug } : {}),
+      },
+      { status: 201 },
+    );
   } catch (e) {
     console.error("[waitlist] error", e);
     return NextResponse.json({ error: "Khong xu ly duoc waitlist." }, { status: 500 });
