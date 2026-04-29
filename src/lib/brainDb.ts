@@ -677,7 +677,8 @@ export async function enqueueEmailAutomationJob(params: {
       SET email = EXCLUDED.email,
           subject = EXCLUDED.subject,
           body = EXCLUDED.body,
-          send_at = EXCLUDED.send_at
+          send_at = EXCLUDED.send_at,
+          sent_at = NULL
     `;
     return;
   }
@@ -689,7 +690,8 @@ export async function enqueueEmailAutomationJob(params: {
        email=excluded.email,
        subject=excluded.subject,
        body=excluded.body,
-       send_at=excluded.send_at`,
+       send_at=excluded.send_at,
+       sent_at=NULL`,
   ).run(params.customer_id, params.email, params.step, params.subject, params.body, params.send_at);
 }
 

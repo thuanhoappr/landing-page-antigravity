@@ -30,13 +30,20 @@ function parseStepBlock(step: 1 | 2 | 3, raw: string): EmailStep {
 export function loadEmailSequence(): EmailStep[] {
   const filePath = path.join(process.cwd(), "my-brain", "email_sequence.md");
   const content = fs.readFileSync(filePath, "utf8");
-  const chunks = content.split(/^#\s*Email\s+\d+[^\n]*$/gim).map((s) => s.trim()).filter(Boolean);
-  if (chunks.length < 3) {
+  // Doc dung 3 block bat dau bang "# Email X ...", bo qua dong mo dau khong thuoc block.
+  const matches = [...content.matchAll(/^#\s*Email\s+([123])[^\n]*\n([\s\S]*?)(?=^#\s*Email\s+[123][^\n]*\n|\Z)/gim)];
+  const byStep = new Map<number, string>();
+  for (const m of matches) {
+    const step = Number(m[1]);
+    const body = (m[2] || "").trim();
+    if (step >= 1 && step <= 3 && body) byStep.set(step, body);
+  }
+  if (byStep.size < 3) {
     throw new Error("email_sequence.md chua du 3 email.");
   }
   return [
-    parseStepBlock(1, chunks[0]),
-    parseStepBlock(2, chunks[1]),
-    parseStepBlock(3, chunks[2]),
+    parseStepBlock(1, byStep.get(1)!),
+    parseStepBlock(2, byStep.get(2)!),
+    parseStepBlock(3, byStep.get(3)!),
   ];
 }
