@@ -8,6 +8,32 @@ export type EmailStep = {
   body: string;
 };
 
+function getFallbackEmailSequence(): EmailStep[] {
+  return [
+    {
+      step: 1,
+      title: "Email 1",
+      subject: "Chào mừng bạn đến với Pickleball 30 Phút",
+      body:
+        "Chào bạn,\n\nCảm ơn bạn đã để lại thông tin tại Pickleball 30 Phút.\nTrong vài ngày tới, mình sẽ gửi tiếp các email giá trị để giúp bạn vào sân tự tin hơn.\n\nCTA: https://pickleball30phut.com/thanh-toan",
+    },
+    {
+      step: 2,
+      title: "Email 2",
+      subject: "Sai lầm lớn nhất của người mới chơi Pickleball",
+      body:
+        "Chào bạn,\n\nInsight quan trọng nhất: đừng cố đánh hay quá sớm. Hãy ưu tiên tư thế sẵn sàng, điểm chạm ổn định và giữ nhịp đơn giản.\n\nCTA: https://pickleball30phut.com/thanh-toan",
+    },
+    {
+      step: 3,
+      title: "Email 3",
+      subject: "Sẵn sàng vào sân tự tin? Đây là lộ trình dành cho bạn",
+      body:
+        "Chào bạn,\n\nNếu bạn muốn rút ngắn thời gian tự mò, lộ trình nhập môn này sẽ giúp bạn biết tập gì trước - sau và vào sân tự tin hơn.\n\nCTA: https://pickleball30phut.com/thanh-toan",
+    },
+  ];
+}
+
 function parseStepBlock(step: 1 | 2 | 3, raw: string): EmailStep {
   const subjectMatch = raw.match(/\*\*Subject:\*\*\s*(.+)/i);
   const subject = (subjectMatch?.[1] || "").trim();
@@ -29,7 +55,13 @@ function parseStepBlock(step: 1 | 2 | 3, raw: string): EmailStep {
 
 export function loadEmailSequence(): EmailStep[] {
   const filePath = path.join(process.cwd(), "my-brain", "email_sequence.md");
-  const content = fs.readFileSync(filePath, "utf8");
+  let content = "";
+  try {
+    content = fs.readFileSync(filePath, "utf8");
+  } catch (e) {
+    console.error("[emailSequence] cannot read email_sequence.md, use fallback", e);
+    return getFallbackEmailSequence();
+  }
   // Doc dung 3 block bat dau bang "# Email X ...", bo qua dong mo dau khong thuoc block.
   const matches = [
     ...content.matchAll(
@@ -43,7 +75,8 @@ export function loadEmailSequence(): EmailStep[] {
     if (step >= 1 && step <= 3 && body) byStep.set(step, body);
   }
   if (byStep.size < 3) {
-    throw new Error("email_sequence.md chua du 3 email.");
+    console.error("[emailSequence] email_sequence.md invalid format, use fallback");
+    return getFallbackEmailSequence();
   }
   return [
     parseStepBlock(1, byStep.get(1)!),
