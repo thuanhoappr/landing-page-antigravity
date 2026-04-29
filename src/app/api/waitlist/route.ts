@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import {
   enqueueEmailAutomationJob,
   findCustomerByPhoneOrEmail,
-  getDueEmailAutomationJobs,
   insertCustomer,
-  markEmailAutomationJobSent,
 } from "@/lib/brainDb";
 import { loadEmailSequence } from "@/lib/emailSequence";
 import { sendEmail } from "@/lib/resend";
@@ -46,28 +44,30 @@ export async function POST(request: Request) {
         const seq = loadEmailSequence();
         const isTestMode = /\+test@/i.test(email);
         const now = Date.now();
-        const offsets = isTestMode ? [0, 0, 0] : [0, 2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
+        const steps = seq.map((s) => ({
+          ...s,
+          body: s.body.replace(/Chao ban/gi, `Chao ${name || "ban"}`),
+        }));
 
-        for (let i = 0; i < seq.length; i += 1) {
-          const step = seq[i];
-          await enqueueEmailAutomationJob({
-            customer_id: customerId,
-            email,
-            step: step.step,
-            subject: step.subject,
-            body: step.body.replace(/Chao ban/gi, `Chao ${name || "ban"}`),
-            send_at: new Date(now + offsets[i]).toISOString(),
-          });
-        }
-
-        // gửi ngay các job đến hạn (đặc biệt cho +test sẽ gửi đủ 3 email tức thì)
-        const due = await getDueEmailAutomationJobs(20);
-        for (const job of due) {
-          try {
-            await sendEmail({ to: job.email, subject: job.subject, text: job.body });
-            await markEmailAutomationJobSent(job.id);
-          } catch (e) {
-            console.error("[waitlist] send automation email failed", e);
+        if (isTestMode) {
+          // Test mode: gui ca 3 email ngay lap tuc de kiem tra nhanh.
+          for (const step of steps) {
+            await sendEmail({ to: email, subject: step.subject, text: step.body });
+          }
+        } else {
+          // Production: gui email 1 ngay, email 2/3 dua vao hang doi cron.
+          await sendEmail({ to: email, subject: steps[0].subject, text: steps[0].body });
+          const futureOffsets = [2 * 24 * 60 * 60 * 1000, 3 * 24 * 60 * 60 * 1000];
+          for (let i = 1; i < steps.length; i += 1) {
+            const step = steps[i];
+            await enqueueEmailAutomationJob({
+              customer_id: customerId,
+              email,
+              step: step.step,
+              subject: step.subject,
+              body: step.body,
+              send_at: new Date(now + futureOffsets[i - 1]).toISOString(),
+            });
           }
         }
       } catch (e) {
