@@ -31,7 +31,11 @@ export function loadEmailSequence(): EmailStep[] {
   const filePath = path.join(process.cwd(), "my-brain", "email_sequence.md");
   const content = fs.readFileSync(filePath, "utf8");
   // Doc dung 3 block bat dau bang "# Email X ...", bo qua dong mo dau khong thuoc block.
-  const matches = [...content.matchAll(/^#\s*Email\s+([123])[^\n]*\n([\s\S]*?)(?=^#\s*Email\s+[123][^\n]*\n|\Z)/gim)];
+  const matches = [
+    ...content.matchAll(
+      /^#\s*Email\s+([123])[^\n]*\n([\s\S]*?)(?=^#\s*Email\s+[123][^\n]*\n|$)/gim,
+    ),
+  ];
   const byStep = new Map<number, string>();
   for (const m of matches) {
     const step = Number(m[1]);
