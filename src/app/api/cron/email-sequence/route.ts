@@ -6,6 +6,8 @@ import {
 import { sendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
+/** Tránh cache tĩnh — cron phải chạy động mỗi lần Vercel gọi. */
+export const dynamic = "force-dynamic";
 
 function isAuthorized(request: Request) {
   const secret = process.env.CRON_SECRET?.trim();

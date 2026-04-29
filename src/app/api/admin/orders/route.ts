@@ -1,7 +1,33 @@
 import { NextResponse } from "next/server";
-import { createOrderManual, listOrdersApi, type OrderView } from "@/lib/brainDb";
+import { createOrderManual, getCustomerEmailById, listOrdersApi, type OrderView } from "@/lib/brainDb";
+import { sendEmail } from "@/lib/resend";
 
 export const runtime = "nodejs";
+
+function orderConfirmationBody(order: OrderView): string {
+  const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(order.amount);
+  return [
+    `Chào ${order.customer_name},`,
+    "",
+    "Cảm ơn bạn đã đồng hành cùng Pickleball 30 Phút.",
+    "",
+    "Đơn hàng của bạn đã được ghi nhận:",
+    `- Mã đơn: #${order.id}`,
+    `- Sản phẩm: ${order.product_name}`,
+    `- Số lượng: ${order.quantity}`,
+    `- Thành tiền: ${money}`,
+    `- Trạng thái: ${order.status}`,
+    "",
+    "Hướng dẫn nhận hàng / vào học:",
+    "Bạn giữ máy — trong 24h mình sẽ gửi link truy cập khóa học hoặc lịch buổi tập thử qua email/Zalo bạn đã để lại. Cần gấp cứ nhắn Zalo, mình hỗ trợ nhanh.",
+    "",
+    "Cảm ơn bạn đã tin tưởng. Chúc bạn sớm vào sân tự tin.",
+    "",
+    "— Coach Thuận Hóa",
+    "Pickleball 30 Phút",
+    "https://pickleball30phut.com",
+  ].join("\n");
+}
 
 export async function GET() {
   const rows = await listOrdersApi();
@@ -52,5 +78,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Không tạo được đơn hàng." }, { status: 500 });
   }
 
-  return NextResponse.json(created as OrderView, { status: 201 });
+  const order = created as OrderView;
+  try {
+    const to = await getCustomerEmailById(order.customer_id);
+    if (to) {
+      await sendEmail({
+        to,
+        subject: `Xác nhận đơn hàng #${order.id} — ${order.product_name}`,
+        text: orderConfirmationBody(order),
+      });
+    }
+  } catch (e) {
+    console.error("[admin/orders POST] order confirmation email failed", e);
+  }
+
+  return NextResponse.json(order, { status: 201 });
 }

@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# API keys (SOP có thể dùng file này — không commit)
+resend_config.txt
+resend_config.txt.txt
+
 # vercel
 .vercel
 

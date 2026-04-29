@@ -2,6 +2,7 @@ import HeroSection from "@/components/HeroSection";
 import PainPoints from "@/components/PainPoints";
 import Solution from "@/components/Solution";
 import Benefits from "@/components/Benefits";
+import Testimonials from "@/components/Testimonials";
 import LeadForm from "@/components/LeadForm";
 
 export default function Home() {
@@ -11,6 +12,7 @@ export default function Home() {
       <PainPoints />
       <Solution />
       <Benefits />
+      <Testimonials />
       <LeadForm />
       
       {/* Footer */}

@@ -642,6 +642,23 @@ export async function findCustomerByPhoneOrEmail(params: {
   return row ? { id: row.id } : null;
 }
 
+/** Email khách (nếu có) — dùng gửi xác nhận đơn. */
+export async function getCustomerEmailById(customerId: number): Promise<string | null> {
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    const [row] = await sql`SELECT email FROM customers WHERE id = ${customerId}`;
+    const e = (row as { email: string | null } | undefined)?.email?.trim();
+    return e || null;
+  }
+  const db = getSqliteOrThrow();
+  const row = db.prepare("SELECT email FROM customers WHERE id = ?").get(customerId) as
+    | { email: string | null }
+    | undefined;
+  const e = row?.email?.trim();
+  return e || null;
+}
+
 export async function enqueueEmailAutomationJob(params: {
   customer_id: number;
   email: string;
