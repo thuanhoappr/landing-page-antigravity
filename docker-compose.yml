@@ -9,4 +9,4 @@ services:
     env_file:
       - .env.local
     volumes:
-      - ./brain.db:/app/brain.db
+      - ./data:/app/data
