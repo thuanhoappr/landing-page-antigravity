@@ -176,13 +176,13 @@ function resolveSqlitePath() {
   if (process.env.VERCEL) {
     return path.join("/tmp", "brain.db");
   }
-  const dbDir = path.join(process.cwd(), "data");
-  // Try to create the directory if it doesn't exist (though in Docker we'll map it)
+  // Sử dụng đường dẫn tuyệt đối trong Docker để đảm bảo chính xác
+  const dbDir = "/app/data";
   if (!fs.existsSync(dbDir)) {
     try {
       fs.mkdirSync(dbDir, { recursive: true });
     } catch (e) {
-      // Ignore errors if directory is already there or read-only
+      // Ignore
     }
   }
   return path.join(dbDir, "brain.db");
