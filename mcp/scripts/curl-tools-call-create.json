@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"create_customer_from_telegram","arguments":{"name":"curl user","phone":"0900000888"}}}

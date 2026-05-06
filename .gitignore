@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/mcp/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -44,3 +45,6 @@ resend_config.txt.txt
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local MCP / SQLite smoke DB
+/data/brain-mcp-test.db

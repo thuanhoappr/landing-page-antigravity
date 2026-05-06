@@ -1,0 +1,21 @@
+[Unit]
+Description=Pickleball landing MCP server (Streamable HTTP, localhost only)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/pickleball-landing/mcp
+Environment=NODE_ENV=production
+# Chứa POSTGRES_URL hoặc BRAIN_DB_PATH, RESEND_*, v.v. (cùng nội dung với app Next)
+EnvironmentFile=-/etc/pickleball-landing/mcp.env
+# Cần `npm ci` trong thư mục mcp trước; dùng npm từ PATH hoặc đổi thành đường dẫn tuyệt đối
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+
+# Chỉ chạy HTTP MCP trên loopback — không public
+# (ứng dụng tự listen 127.0.0.1:3001 trong code)
+
+[Install]
+WantedBy=multi-user.target

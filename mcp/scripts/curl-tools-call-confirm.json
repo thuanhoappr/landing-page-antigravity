@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"confirm_order_paid_by_invoice","arguments":{"sepay_invoice":"PB-999999999"}}}

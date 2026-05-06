@@ -173,6 +173,10 @@ async function ensurePg() {
 /* ---------- SQLite (local hoặc /tmp trên Vercel khi chưa có Postgres) ---------- */
 
 function resolveSqlitePath() {
+  const override = process.env.BRAIN_DB_PATH?.trim();
+  if (override) {
+    return override;
+  }
   if (process.env.VERCEL) {
     return path.join("/tmp", "brain.db");
   }
@@ -651,6 +655,23 @@ export async function findCustomerByPhoneOrEmail(params: {
   return row ? { id: row.id } : null;
 }
 
+export async function findCustomerByZalo(zalo: string): Promise<{ id: number } | null> {
+  const z = zalo.trim();
+  if (!z) return null;
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    const rows = await sql`SELECT id FROM customers WHERE zalo = ${z} ORDER BY id DESC LIMIT 1`;
+    if (!rows.length) return null;
+    return { id: Number((rows[0] as { id: number }).id) };
+  }
+  const db = getSqliteOrThrow();
+  const row = db.prepare(`SELECT id FROM customers WHERE zalo = ? ORDER BY id DESC LIMIT 1`).get(z) as
+    | { id: number }
+    | undefined;
+  return row ? { id: row.id } : null;
+}
+
 /** Email khách (nếu có) — dùng gửi xác nhận đơn. */
 export async function getCustomerEmailById(customerId: number): Promise<string | null> {
   await ensurePg();
@@ -814,6 +835,55 @@ export async function getOrderViewById(orderId: number): Promise<OrderView | nul
       `,
     )
     .get(orderId) as OrderView | null;
+}
+
+export async function getOrderViewBySepayInvoice(invoice: string): Promise<OrderView | null> {
+  const inv = invoice.trim();
+  if (!inv) return null;
+  await ensurePg();
+  if (usePostgres) {
+    const sql = getPg()!;
+    const [row] = await sql`
+      SELECT
+        o.id,
+        o.customer_id,
+        c.name AS customer_name,
+        o.product_id,
+        p.name AS product_name,
+        o.quantity,
+        o.amount,
+        o.status,
+        o.purchase_date,
+        o.created_at
+      FROM orders o
+      JOIN customers c ON c.id = o.customer_id
+      JOIN products p ON p.id = o.product_id
+      WHERE o.sepay_invoice = ${inv}
+    `;
+    return (row as unknown as OrderView) ?? null;
+  }
+  const db = getSqliteOrThrow();
+  return db
+    .prepare(
+      `
+        SELECT
+          o.id,
+          o.customer_id,
+          c.name AS customer_name,
+          o.product_id,
+          p.name AS product_name,
+          o.quantity,
+          o.amount,
+          o.status,
+          o.purchase_date,
+          o.created_at
+        FROM orders o
+        JOIN customers c ON c.id = o.customer_id
+        JOIN products p ON p.id = o.product_id
+        WHERE o.sepay_invoice = ?
+      `,
+    )
+    .get(inv) as OrderView | null;
 }
 
 type OrderRecord = {
@@ -1381,5 +1451,155 @@ export async function sepayProcessBankIncomeWebhook(payload: {
     handled: true,
     duplicate: !first,
     matched: result.matched || result.alreadyPaid === true,
+  };
+}
+
+export type DailyOpsDigestCustomerRow = {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  registration_date: string;
+};
+
+export type DailyOpsDigestResult = {
+  period: { since: string; until: string };
+  new_customers: { count: number; items: DailyOpsDigestCustomerRow[] };
+  orders_summary: Record<string, number>;
+  pending_payments: Array<{
+    order_id: number;
+    customer_name: string;
+    amount: number;
+    sepay_invoice: string | null;
+    created_at: string;
+  }>;
+  low_stock_products: Array<{ id: number; name: string; quantity_remaining: number }>;
+  email_queue?: { unsent_total: number; overdue_unsent: number };
+};
+
+/**
+ * Bản tin vận hành (MCP / Telegram): lead mới trong khoảng thời gian, tổng đơn theo status, đơn CK chờ, tồn kho thấp, hàng đợi email.
+ */
+export async function getDailyOpsDigest(params: {
+  sinceIso: string;
+  untilIso: string;
+  includeEmailQueue: boolean;
+  pendingOrdersLimit: number;
+  lowStockThreshold?: number;
+}): Promise<DailyOpsDigestResult> {
+  await ensurePg();
+  const threshold = Number(params.lowStockThreshold ?? 5);
+  const safeThreshold = Number.isFinite(threshold) && threshold >= 0 ? threshold : 5;
+  const limitPending = Math.min(100, Math.max(1, Math.floor(params.pendingOrdersLimit)));
+
+  if (usePostgres) {
+    const sql = getPg()!;
+    const customers = await sql`
+      SELECT id, name, phone, email, registration_date
+      FROM customers
+      WHERE registration_date >= ${params.sinceIso}::timestamptz
+        AND registration_date <= ${params.untilIso}::timestamptz
+      ORDER BY id DESC
+      LIMIT 500
+    `;
+    const statusRows = await sql`
+      SELECT status, COUNT(*)::int AS c FROM orders GROUP BY status
+    `;
+    const orders_summary: Record<string, number> = {};
+    for (const r of statusRows as unknown as Array<{ status: string; c: number }>) {
+      orders_summary[r.status] = r.c;
+    }
+    const pending = await sql`
+      SELECT o.id AS order_id, c.name AS customer_name, o.amount, o.sepay_invoice, o.created_at
+      FROM orders o
+      JOIN customers c ON c.id = o.customer_id
+      WHERE o.status = 'pending' AND o.sepay_invoice IS NOT NULL
+      ORDER BY o.id DESC
+      LIMIT ${limitPending}
+    `;
+    const lowStock = await sql`
+      SELECT id, name, quantity_remaining
+      FROM products
+      WHERE quantity_remaining <= ${safeThreshold}
+      ORDER BY quantity_remaining ASC, id ASC
+      LIMIT 100
+    `;
+    let email_queue: DailyOpsDigestResult["email_queue"];
+    if (params.includeEmailQueue) {
+      const [eq] = await sql`
+        SELECT
+          COUNT(*) FILTER (WHERE sent_at IS NULL)::int AS unsent_total,
+          COUNT(*) FILTER (WHERE sent_at IS NULL AND send_at <= NOW())::int AS overdue_unsent
+        FROM email_automation_jobs
+      `;
+      const row = eq as { unsent_total: number; overdue_unsent: number };
+      email_queue = { unsent_total: row.unsent_total, overdue_unsent: row.overdue_unsent };
+    }
+    return {
+      period: { since: params.sinceIso, until: params.untilIso },
+      new_customers: {
+        count: (customers as unknown as DailyOpsDigestCustomerRow[]).length,
+        items: customers as unknown as DailyOpsDigestCustomerRow[],
+      },
+      orders_summary,
+      pending_payments: pending as unknown as DailyOpsDigestResult["pending_payments"],
+      low_stock_products: lowStock as unknown as DailyOpsDigestResult["low_stock_products"],
+      ...(email_queue ? { email_queue } : {}),
+    };
+  }
+
+  const db = getSqliteOrThrow();
+  const customers = db
+    .prepare(
+      `SELECT id, name, phone, email, registration_date FROM customers
+       WHERE datetime(registration_date) >= datetime(?) AND datetime(registration_date) <= datetime(?)
+       ORDER BY id DESC LIMIT 500`,
+    )
+    .all(params.sinceIso, params.untilIso) as DailyOpsDigestCustomerRow[];
+  const statusRows = db.prepare(`SELECT status, COUNT(*) AS c FROM orders GROUP BY status`).all() as Array<{
+    status: string;
+    c: number;
+  }>;
+  const orders_summary: Record<string, number> = {};
+  for (const r of statusRows) {
+    orders_summary[r.status] = r.c;
+  }
+  const pending = db
+    .prepare(
+      `SELECT o.id AS order_id, c.name AS customer_name, o.amount, o.sepay_invoice, o.created_at
+       FROM orders o JOIN customers c ON c.id = o.customer_id
+       WHERE o.status = 'pending' AND o.sepay_invoice IS NOT NULL
+       ORDER BY o.id DESC LIMIT ?`,
+    )
+    .all(limitPending) as DailyOpsDigestResult["pending_payments"];
+  const lowStock = db
+    .prepare(
+      `SELECT id, name, quantity_remaining FROM products
+       WHERE quantity_remaining <= ?
+       ORDER BY quantity_remaining ASC, id ASC LIMIT 100`,
+    )
+    .all(safeThreshold) as DailyOpsDigestResult["low_stock_products"];
+  let email_queue: DailyOpsDigestResult["email_queue"];
+  if (params.includeEmailQueue) {
+    const row = db
+      .prepare(
+        `SELECT
+           SUM(CASE WHEN sent_at IS NULL THEN 1 ELSE 0 END) AS unsent_total,
+           SUM(CASE WHEN sent_at IS NULL AND datetime(send_at) <= datetime('now') THEN 1 ELSE 0 END) AS overdue_unsent
+         FROM email_automation_jobs`,
+      )
+      .get() as { unsent_total: number | null; overdue_unsent: number | null };
+    email_queue = {
+      unsent_total: Number(row.unsent_total ?? 0),
+      overdue_unsent: Number(row.overdue_unsent ?? 0),
+    };
+  }
+  return {
+    period: { since: params.sinceIso, until: params.untilIso },
+    new_customers: { count: customers.length, items: customers },
+    orders_summary,
+    pending_payments: pending,
+    low_stock_products: lowStock,
+    ...(email_queue ? { email_queue } : {}),
   };
 }
