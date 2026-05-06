@@ -133,27 +133,30 @@ export default function LeadForm() {
   return (
     <section id="lead-form" className="py-24 bg-navy relative overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover opacity-35 pointer-events-none md:hidden"
+        className="absolute inset-0 bg-cover opacity-50 pointer-events-none md:hidden"
         style={{
           backgroundImage: "url('/images/leadform-trust-ab.png')",
           backgroundPosition: "22% center",
+          filter: "contrast(1.14) saturate(1.08) brightness(0.95)",
         }}
       />
       <div
-        className="absolute inset-0 bg-cover opacity-35 pointer-events-none hidden md:block lg:hidden"
+        className="absolute inset-0 bg-cover opacity-50 pointer-events-none hidden md:block lg:hidden"
         style={{
           backgroundImage: "url('/images/leadform-trust-ab.png')",
           backgroundPosition: "center center",
+          filter: "contrast(1.14) saturate(1.08) brightness(0.95)",
         }}
       />
       <div
-        className="absolute inset-0 bg-cover opacity-35 pointer-events-none hidden lg:block"
+        className="absolute inset-0 bg-cover opacity-50 pointer-events-none hidden lg:block"
         style={{
           backgroundImage: "url('/images/leadform-trust-ab.png')",
           backgroundPosition: "center 30%",
+          filter: "contrast(1.14) saturate(1.08) brightness(0.95)",
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-navy/95 via-navy/90 to-slate-900/90 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-navy/82 via-navy/76 to-slate-900/72 pointer-events-none" />
       <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand/20 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
 
