@@ -20,34 +20,31 @@ export default function Solution() {
             className="w-full lg:w-1/2"
           >
             <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[420px] lg:h-[560px]">
-              <div className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-brand/10 group">
-                <div className="absolute inset-0 bg-gradient-to-t from-darker/80 to-transparent z-10" />
+              <div className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-brand/10 group bg-[#050b1a]">
                 <Image
-                  src="/images/form-bg.png"
+                  src="/images/solution-card-1.png"
                   alt="Coach thực chiến Pickleball"
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="object-contain object-center transition-transform duration-700 group-hover:scale-[1.02]"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority
                 />
               </div>
-              <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-xl group">
-                <div className="absolute inset-0 bg-gradient-to-t from-darker/80 to-transparent z-10" />
+              <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-xl group bg-[#050b1a]">
                 <Image
-                  src="/images/solution-img.png"
+                  src="/images/solution-card-2.png"
                   alt="Mẹo nhập môn pickleball"
                   fill
-                  className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="object-contain object-center transition-transform duration-700 group-hover:scale-[1.02]"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                 />
               </div>
-              <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-xl group">
-                <div className="absolute inset-0 bg-gradient-to-t from-darker/80 to-transparent z-10" />
+              <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-xl group bg-[#050b1a]">
                 <Image
-                  src="/images/solution-man-u50.png"
+                  src="/images/solution-card-3.png"
                   alt="Footwork pickleball cho người mới"
                   fill
-                  className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="object-contain object-center transition-transform duration-700 group-hover:scale-[1.02]"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                 />
               </div>
