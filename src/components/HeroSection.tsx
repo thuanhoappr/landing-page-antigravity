@@ -9,9 +9,26 @@ export default function HeroSection() {
       {/* Background elements */}
       <div className="absolute inset-0 z-0">
         {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
-          style={{ backgroundImage: "url('/images/hero-bg.png')" }}
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat opacity-90 md:hidden"
+          style={{
+            backgroundImage: "url('/images/hero-bg-v2.png')",
+            backgroundPosition: "62% center",
+          }}
+        />
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat opacity-90 hidden md:block lg:hidden"
+          style={{
+            backgroundImage: "url('/images/hero-bg-v2.png')",
+            backgroundPosition: "58% center",
+          }}
+        />
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat opacity-90 hidden lg:block"
+          style={{
+            backgroundImage: "url('/images/hero-bg-v2.png')",
+            backgroundPosition: "54% center",
+          }}
         />
         {/* Glow effects */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/20 rounded-full blur-[128px] opacity-50 mix-blend-screen animate-pulse" />
