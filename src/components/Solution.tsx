@@ -19,7 +19,7 @@ export default function Solution() {
             transition={{ duration: 0.6 }}
             className="w-full lg:w-1/2"
           >
-            <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[420px] lg:h-[560px]">
+            <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[480px] md:h-[540px] lg:h-[560px]">
               <div className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-brand/10 group bg-[#050b1a]">
                 <Image
                   src="/images/solution-card-1.png"
