@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 
 export default function Solution() {
   return (
@@ -18,26 +19,36 @@ export default function Solution() {
             transition={{ duration: 0.6 }}
             className="w-full lg:w-1/2"
           >
-            <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[450px] lg:h-[600px]">
+            <div className="grid grid-cols-2 grid-rows-2 gap-4 h-[420px] lg:h-[560px]">
               <div className="col-span-2 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-brand/10 group">
                 <div className="absolute inset-0 bg-gradient-to-t from-darker/80 to-transparent z-10" />
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/solution-couple-u50.png')" }}
+                <Image
+                  src="/images/form-bg.png"
+                  alt="Coach thực chiến Pickleball"
+                  fill
+                  className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
                 />
               </div>
               <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-xl group">
                 <div className="absolute inset-0 bg-gradient-to-t from-darker/80 to-transparent z-10" />
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/solution-img.png')" }}
+                <Image
+                  src="/images/solution-img.png"
+                  alt="Mẹo nhập môn pickleball"
+                  fill
+                  className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                  sizes="(max-width: 1024px) 50vw, 25vw"
                 />
               </div>
               <div className="col-span-1 row-span-1 relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-xl group">
                 <div className="absolute inset-0 bg-gradient-to-t from-darker/80 to-transparent z-10" />
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ backgroundImage: "url('/images/solution-man-u50.png')" }}
+                <Image
+                  src="/images/solution-man-u50.png"
+                  alt="Footwork pickleball cho người mới"
+                  fill
+                  className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                  sizes="(max-width: 1024px) 50vw, 25vw"
                 />
               </div>
             </div>
