@@ -29,7 +29,7 @@ export default function HeroSection() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8"
         >
           <Trophy className="w-4 h-4 text-brand" />
-          <span>Hướng dẫn Thực chiến Pickleball cho Người bận rộn</span>
+          <span>Thực chiến Pickleball cùng Coach PPR (USA)</span>
         </motion.div>
 
         <motion.h1
@@ -38,7 +38,7 @@ export default function HeroSection() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase tracking-tight text-white mb-6 leading-[1.2] max-w-4xl drop-shadow-lg"
         >
-          Pickleball cho Người Nhập Môn <br className="hidden md:block" /><span className="block mt-4 text-brand drop-shadow-[0_0_15px_rgba(234,255,0,0.5)]">Dành cho người bận rộn</span>
+          NHẬP MÔN PICKLEBALL
         </motion.h1>
 
         <motion.p
