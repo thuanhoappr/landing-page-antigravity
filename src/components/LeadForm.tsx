@@ -133,8 +133,11 @@ export default function LeadForm() {
   return (
     <section id="lead-form" className="py-24 bg-navy relative overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-35 pointer-events-none"
-        style={{ backgroundImage: "url('/images/form-bg.png')" }}
+        className="absolute inset-0 bg-cover opacity-35 pointer-events-none"
+        style={{
+          backgroundImage: "url('/images/solution-couple-u50.png')",
+          backgroundPosition: "center 22%",
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-navy/95 via-navy/90 to-slate-900/90 pointer-events-none" />
       <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand/20 blur-3xl pointer-events-none" />
