@@ -2,10 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
+import Image from "next/image";
 
 const stories = [
   {
     name: "Chị Lan",
+    avatar: "/images/testimonial-lan.png",
     meta: "56 tuổi — KDC Bàu Cát, TP.HCM",
     before:
       "Ra sân lần đầu không biết đứng đâu, cứ chạy lung tung, mọi người nhìn xấu hổ lắm.",
@@ -14,6 +16,7 @@ const stories = [
   },
   {
     name: "Anh Tú",
+    avatar: "/images/testimonial-tu.png",
     meta: "48 tuổi — Tòa Oriental Plaza, TP.HCM",
     before:
       "Chơi tennis được 5 năm nhưng qua Pickleball vẫn bỡ ngỡ — kỹ thuật khác hoàn toàn.",
@@ -22,6 +25,7 @@ const stories = [
   },
   {
     name: "Em Hiền",
+    avatar: "/images/testimonial-hien.png",
     meta: "35 tuổi — Quản lý kinh doanh, TP.HCM",
     before:
       "Ban đầu em lo vì nghĩ mình bận quá, ít vận động.",
@@ -70,11 +74,22 @@ export default function Testimonials() {
               className="rounded-2xl border border-white/10 bg-navy-light/20 p-6 md:p-8 flex flex-col gap-5 shadow-lg shadow-black/20 hover:border-brand/25 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="flex items-start gap-3">
+                  <div className="relative w-14 h-14 rounded-full overflow-hidden border border-brand/40 shrink-0 shadow-md shadow-brand/20">
+                    <Image
+                      src={item.avatar}
+                      alt={item.name}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
                   <h3 className="text-xl font-black text-white italic uppercase tracking-tight">
                     {item.name}
                   </h3>
                   <p className="text-sm text-slate-500 mt-1">{item.meta}</p>
+                </div>
                 </div>
                 <Quote className="w-10 h-10 text-brand/80 shrink-0" aria-hidden />
               </div>
