@@ -13,21 +13,21 @@ export default function HeroSection() {
           className="absolute inset-0 bg-cover bg-no-repeat opacity-90 md:hidden"
           style={{
             backgroundImage: "url('/images/hero-bg-v2.png')",
-            backgroundPosition: "62% center",
+            backgroundPosition: "66% 20%",
           }}
         />
         <div
           className="absolute inset-0 bg-cover bg-no-repeat opacity-90 hidden md:block lg:hidden"
           style={{
             backgroundImage: "url('/images/hero-bg-v2.png')",
-            backgroundPosition: "58% center",
+            backgroundPosition: "62% 18%",
           }}
         />
         <div
           className="absolute inset-0 bg-cover bg-no-repeat opacity-90 hidden lg:block"
           style={{
             backgroundImage: "url('/images/hero-bg-v2.png')",
-            backgroundPosition: "54% center",
+            backgroundPosition: "57% 16%",
           }}
         />
         {/* Glow effects */}
