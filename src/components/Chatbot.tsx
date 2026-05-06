@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "Khóa học giá bao nhiêu?",
-    a: "Dạ, khóa học trọn đời chỉ 99.000đ — chỉ bằng một ly cà phê Starbucks thôi ạ. Nhưng trước hết, Anh/Chị có thể đăng ký Học Thử Miễn Phí buổi đầu để xem cách dạy của Coach có phù hợp với mình không nhé!"
+    a: "Dạ, khóa học 99.000đ có thời hạn 365 ngày ạ — chỉ bằng một ly cà phê Starbucks thôi. Nhưng trước hết, Anh/Chị có thể đăng ký Học Thử Miễn Phí buổi đầu để xem cách dạy của Coach có phù hợp với mình không nhé!"
   },
   {
     q: "Coach Thuận Hóa có bằng cấp gì không?",

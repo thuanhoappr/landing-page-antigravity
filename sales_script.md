@@ -17,7 +17,7 @@
 "Đúng là kỹ năng cần ra sân luyện, nhưng kiến thức nền (biết luật, biết đứng đâu, biết cách di chuyển) thì học online trước sẽ giúp Anh/Chị tiết kiệm 50% thời gian bỡ ngỡ trên sân. Anh/Chị học xong lý thuyết, ra sân thực hành là chuẩn bài luôn ạ."
 
 **Q4: Khóa học giá bao nhiêu?**
-"Dạ, khóa học trọn đời chỉ **99.000đ** — chỉ bằng một ly cà phê Starbucks thôi ạ. Nhưng trước hết, Anh/Chị có thể đăng ký **Học Thử Miễn Phí** buổi đầu để xem cách dạy của Coach có phù hợp với mình không nhé!"
+"Dạ, khóa học **99.000đ / 365 ngày** — chỉ bằng một ly cà phê Starbucks thôi ạ. Nhưng trước hết, Anh/Chị có thể đăng ký **Học Thử Miễn Phí** buổi đầu để xem cách dạy của Coach có phù hợp với mình không nhé!"
 
 **Q5: Coach Thuận Hóa có bằng cấp gì không?**
 "Dạ có ạ, Coach Thuận Hóa đạt chứng chỉ chuẩn **PPR Level 2** — đây là bằng cấp huấn luyện Pickleball quốc tế uy tín nhất hiện nay. Coach luôn làm việc với phương châm 'Nói được làm được' nên Anh/Chị hoàn toàn yên tâm về chuyên môn."
@@ -40,7 +40,7 @@
 ---
 
 ## 3. Câu Chốt Đơn (Closing)
-"Với 99k mà đổi lại sự tự tin trên sân và tránh được những chấn thương không đáng có do sai tư thế, em thấy đây là khoản đầu tư hời nhất cho sức khỏe đấy ạ. Anh/Chị muốn nhận link thanh toán gói trọn đời luôn hay muốn đăng ký học thử trước ạ?"
+"Với 99k mà đổi lại sự tự tin trên sân và tránh được những chấn thương không đáng có do sai tư thế, em thấy đây là khoản đầu tư hời nhất cho sức khỏe đấy ạ. Anh/Chị muốn nhận link thanh toán gói **365 ngày** luôn hay muốn đăng ký học thử trước ạ?"
 
 ---
 
