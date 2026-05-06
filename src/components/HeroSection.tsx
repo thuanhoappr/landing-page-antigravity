@@ -39,6 +39,9 @@ export default function HeroSection() {
           className="text-3xl md:text-4xl lg:text-5xl font-black italic uppercase tracking-tight text-white mb-6 leading-[1.2] max-w-4xl drop-shadow-lg"
         >
           NHẬP MÔN PICKLEBALL
+          <span className="block mt-3 text-brand drop-shadow-[0_0_18px_rgba(234,255,0,0.55)]">
+            DÀNH CHO NGƯỜI BẬN RỘN
+          </span>
         </motion.h1>
 
         <motion.p
