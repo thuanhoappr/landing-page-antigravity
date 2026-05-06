@@ -278,7 +278,11 @@ function buildMcpServer() {
   return server;
 }
 
-const app = createMcpExpressApp({ host: HOST });
+const app = createMcpExpressApp({
+  host: HOST,
+  // Allow requests proxied by Caddy from public admin domain.
+  allowedHosts: [HOST, "localhost", "admin.pickleball30phut.com"],
+});
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
 const mcpPostHandler = async (req: Request, res: Response) => {
