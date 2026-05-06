@@ -78,9 +78,19 @@ Tương tự dùng `curl-tools-call-confirm.json` và `curl-tools-call-create.js
 
 ## Triển khai production (Linux + systemd)
 
+Trên VPS cần **Node + npm trên host** (không chỉ trong Docker): ví dụ Ubuntu `apt install -y nodejs npm`.
+
+**Quan trọng:** `brainDb` nằm ở `src/lib/` nhưng `node_modules` của MCP ở `mcp/`. Trong unit systemd phải có:
+
+`Environment=NODE_PATH=/đường/tới/repo/mcp/node_modules`
+
+(như trong `mcp/pickleball-mcp.service`), nếu không process sẽ lỗi `Cannot find module 'better-sqlite3'`.
+
+Đường dẫn repo trên máy bạn có thể là `/opt/pickleball-landing` (chỉnh `WorkingDirectory` / `NODE_PATH` cho khớp).
+
 1. Clone repo, `cd mcp && npm ci`.
-2. Tạo user hệ thống riêng (khuyến nghị), cấp quyền đọc/ghi `brain.db` hoặc biến `POSTGRES_URL`.
-3. File service mẫu: `mcp/pickleball-mcp.service` (chỉnh `User`, `WorkingDirectory`, `EnvironmentFile`).
+2. Cấp quyền đọc/ghi `brain.db` hoặc cấu hình `POSTGRES_URL` / `.env` giống app Next.
+3. File service mẫu: `mcp/pickleball-mcp.service` (chỉnh `WorkingDirectory`, `EnvironmentFile`, `NODE_PATH`).
 
 ```bash
 sudo cp mcp/pickleball-mcp.service /etc/systemd/system/
