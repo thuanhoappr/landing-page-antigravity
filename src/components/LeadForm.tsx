@@ -131,12 +131,14 @@ export default function LeadForm() {
   const labelClass = "text-sm font-medium text-slate-300 block ml-1 mb-1";
 
   return (
-    <section id="lead-form" className="py-24 bg-brand relative">
+    <section id="lead-form" className="py-24 bg-navy relative overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-luminosity pointer-events-none"
+        className="absolute inset-0 bg-cover bg-center opacity-35 pointer-events-none"
         style={{ backgroundImage: "url('/images/form-bg.png')" }}
       />
-      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-brand via-brand-dark/80 to-sky/90 pointer-events-none mix-blend-hard-light" />
+      <div className="absolute inset-0 bg-gradient-to-br from-navy/95 via-navy/90 to-slate-900/90 pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand/20 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl relative z-10">
         <motion.div

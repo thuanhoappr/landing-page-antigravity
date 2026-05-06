@@ -10,15 +10,15 @@ export default function HeroSection() {
       <div className="absolute inset-0 z-0">
         {/* Background Image */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
           style={{ backgroundImage: "url('/images/hero-bg.png')" }}
         />
         {/* Glow effects */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/20 rounded-full blur-[128px] opacity-50 mix-blend-screen animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[30rem] h-[30rem] bg-brand/10 rounded-full blur-[128px] opacity-30 mix-blend-screen" />
         {/* Overlays for text readability */}
-        <div className="absolute inset-0 bg-navy/50 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/70 to-transparent z-10" />
+        <div className="absolute inset-0 bg-navy/35 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/85 via-navy/55 to-navy/20 z-10" />
       </div>
 
       <div className="container relative z-20 mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
