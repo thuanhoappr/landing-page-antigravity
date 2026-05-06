@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 interface Message {
   id: string;
@@ -160,8 +161,15 @@ export default function Chatbot() {
             {/* Header */}
             <div className="p-4 bg-brand flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center text-brand font-bold">
-                  TH
+                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-navy/20 bg-navy">
+                  <Image
+                    src="/coach-avatar.png"
+                    alt="Coach Thuận Hóa"
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                    priority
+                  />
                 </div>
                 <div>
                   <h3 className="text-navy font-black italic uppercase text-sm leading-tight">Coach Thuận Hóa</h3>
