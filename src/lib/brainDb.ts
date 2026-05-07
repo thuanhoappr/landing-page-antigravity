@@ -155,6 +155,19 @@ async function ensurePgSchema() {
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS quantity INTEGER NOT NULL DEFAULT 1`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS sepay_invoice TEXT`;
   await sql`ALTER TABLE customers ADD COLUMN IF NOT EXISTS email TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_notified_at TIMESTAMPTZ`;
+  await sql`ALTER TABLE customers ADD COLUMN IF NOT EXISTS lead_notified_at TIMESTAMPTZ`;
+  // Backfill: đánh dấu các bản ghi cũ (>1h) đã thông báo để khỏi spam khi bot mới chạy.
+  await sql`
+    UPDATE orders SET paid_notified_at = NOW()
+    WHERE status = 'paid' AND paid_notified_at IS NULL
+      AND created_at < NOW() - INTERVAL '1 hour'
+  `;
+  await sql`
+    UPDATE customers SET lead_notified_at = NOW()
+    WHERE lead_notified_at IS NULL
+      AND registration_date < NOW() - INTERVAL '1 hour'
+  `;
   await sql`
     CREATE TABLE IF NOT EXISTS sepay_webhook_processed (
       external_id TEXT PRIMARY KEY
@@ -293,6 +306,23 @@ function initSqliteSchema(db: Database.Database) {
   if (!hasColumn(db, "customers", "email")) {
     tryExecIgnoringDuplicateColumn(db, "ALTER TABLE customers ADD COLUMN email TEXT");
   }
+  if (!hasColumn(db, "orders", "paid_notified_at")) {
+    tryExecIgnoringDuplicateColumn(db, "ALTER TABLE orders ADD COLUMN paid_notified_at TEXT");
+  }
+  if (!hasColumn(db, "customers", "lead_notified_at")) {
+    tryExecIgnoringDuplicateColumn(db, "ALTER TABLE customers ADD COLUMN lead_notified_at TEXT");
+  }
+  // Backfill: đánh dấu bản ghi cũ (>1h) đã thông báo để khỏi spam khi bot mới chạy.
+  db.exec(
+    `UPDATE orders SET paid_notified_at = datetime('now')
+     WHERE status = 'paid' AND paid_notified_at IS NULL
+       AND datetime(created_at) < datetime('now','-1 hours')`,
+  );
+  db.exec(
+    `UPDATE customers SET lead_notified_at = datetime('now')
+     WHERE lead_notified_at IS NULL
+       AND datetime(registration_date) < datetime('now','-1 hours')`,
+  );
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS ux_customers_email ON customers(email) WHERE email IS NOT NULL");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS ux_email_jobs_customer_step ON email_automation_jobs(customer_id, step)");
   db.exec(`
@@ -1602,4 +1632,231 @@ export async function getDailyOpsDigest(params: {
     low_stock_products: lowStock,
     ...(email_queue ? { email_queue } : {}),
   };
+}
+
+/* ---------- Business signals (Coach PPR proactive alerts) ---------- */
+
+export type BusinessSignalPaidOrder = {
+  order_id: number;
+  customer_id: number;
+  customer_name: string;
+  customer_phone: string | null;
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  amount: number;
+  sepay_invoice: string | null;
+  purchase_date: string;
+  created_at: string;
+};
+
+export type BusinessSignalNewLead = {
+  customer_id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  zalo: string | null;
+  registration_date: string;
+};
+
+export type BusinessSignalPendingOrder = {
+  order_id: number;
+  customer_id: number;
+  customer_name: string;
+  customer_phone: string | null;
+  amount: number;
+  sepay_invoice: string | null;
+  created_at: string;
+  hours_pending: number;
+};
+
+export type BusinessSignalsResult = {
+  generated_at: string;
+  paid_orders: BusinessSignalPaidOrder[];
+  new_leads: BusinessSignalNewLead[];
+  stuck_pending_orders: BusinessSignalPendingOrder[];
+  marked_paid_notified: number;
+  marked_lead_notified: number;
+};
+
+/**
+ * Lấy 3 loại tín hiệu kinh doanh chưa được thông báo:
+ * - paid_orders: đơn vừa chuyển paid mà chưa nhắn DM admin (paid_notified_at IS NULL).
+ * - new_leads: khách mới đăng ký (lead_notified_at IS NULL).
+ * - stuck_pending_orders: đơn pending có sepay_invoice quá `pendingThresholdHours` giờ
+ *   (KHÔNG đánh dấu notified — dùng cho báo cáo sáng, có thể trùng nhau).
+ *
+ * Nếu `markNotified=true`, các paid_orders / new_leads trả về sẽ được set timestamp ngay
+ * trong cùng transaction để tránh gửi trùng khi cron chạy lại.
+ */
+export async function getBusinessSignals(opts: {
+  pendingThresholdHours: number;
+  markNotified: boolean;
+  limitPerSignal: number;
+}): Promise<BusinessSignalsResult> {
+  await ensurePg();
+  const limit = Math.min(50, Math.max(1, Math.floor(opts.limitPerSignal)));
+  const thresholdHours = Math.max(0, Number(opts.pendingThresholdHours) || 0);
+  const generatedAt = new Date().toISOString();
+
+  if (usePostgres) {
+    const sql = getPg()!;
+    return sql.begin(async (tx) => {
+      const paidRows = (await tx`
+        SELECT o.id AS order_id, o.customer_id, c.name AS customer_name, c.phone AS customer_phone,
+               o.product_id, p.name AS product_name, o.quantity, o.amount, o.sepay_invoice,
+               o.purchase_date, o.created_at
+        FROM orders o
+        JOIN customers c ON c.id = o.customer_id
+        JOIN products p ON p.id = o.product_id
+        WHERE o.status = 'paid' AND o.paid_notified_at IS NULL
+        ORDER BY o.id DESC
+        LIMIT ${limit}
+      `) as unknown as BusinessSignalPaidOrder[];
+
+      const leadRows = (await tx`
+        SELECT id AS customer_id, name, phone, email, zalo, registration_date
+        FROM customers
+        WHERE lead_notified_at IS NULL
+        ORDER BY id DESC
+        LIMIT ${limit}
+      `) as unknown as BusinessSignalNewLead[];
+
+      const pendingRows = (await tx`
+        SELECT o.id AS order_id, o.customer_id, c.name AS customer_name, c.phone AS customer_phone,
+               o.amount, o.sepay_invoice, o.created_at,
+               EXTRACT(EPOCH FROM (NOW() - o.created_at)) / 3600.0 AS hours_pending
+        FROM orders o
+        JOIN customers c ON c.id = o.customer_id
+        WHERE o.status = 'pending' AND o.sepay_invoice IS NOT NULL
+          AND o.created_at < NOW() - (${thresholdHours}::int * INTERVAL '1 hour')
+        ORDER BY o.created_at ASC
+        LIMIT ${limit}
+      `) as unknown as Array<BusinessSignalPendingOrder & { hours_pending: number | string }>;
+
+      let markedPaid = 0;
+      let markedLead = 0;
+      if (opts.markNotified) {
+        if (paidRows.length) {
+          const ids = paidRows.map((r) => r.order_id);
+          const r = await tx`
+            UPDATE orders SET paid_notified_at = NOW() WHERE id = ANY(${ids}::int[])
+          `;
+          markedPaid = r.count ?? ids.length;
+        }
+        if (leadRows.length) {
+          const ids = leadRows.map((r) => r.customer_id);
+          const r = await tx`
+            UPDATE customers SET lead_notified_at = NOW() WHERE id = ANY(${ids}::int[])
+          `;
+          markedLead = r.count ?? ids.length;
+        }
+      }
+
+      return {
+        generated_at: generatedAt,
+        paid_orders: paidRows,
+        new_leads: leadRows,
+        stuck_pending_orders: pendingRows.map((r) => ({
+          order_id: Number(r.order_id),
+          customer_id: Number(r.customer_id),
+          customer_name: r.customer_name,
+          customer_phone: r.customer_phone ?? null,
+          amount: Number(r.amount),
+          sepay_invoice: r.sepay_invoice ?? null,
+          created_at: String(r.created_at),
+          hours_pending: Number(Number(r.hours_pending).toFixed(2)),
+        })),
+        marked_paid_notified: markedPaid,
+        marked_lead_notified: markedLead,
+      };
+    });
+  }
+
+  const db = getSqliteOrThrow();
+  const tx = db.transaction(() => {
+    const paidRows = db
+      .prepare(
+        `SELECT o.id AS order_id, o.customer_id, c.name AS customer_name, c.phone AS customer_phone,
+                o.product_id, p.name AS product_name, o.quantity, o.amount, o.sepay_invoice,
+                o.purchase_date, o.created_at
+         FROM orders o
+         JOIN customers c ON c.id = o.customer_id
+         JOIN products p ON p.id = o.product_id
+         WHERE o.status = 'paid' AND o.paid_notified_at IS NULL
+         ORDER BY o.id DESC
+         LIMIT ?`,
+      )
+      .all(limit) as BusinessSignalPaidOrder[];
+
+    const leadRows = db
+      .prepare(
+        `SELECT id AS customer_id, name, phone, email, zalo, registration_date
+         FROM customers
+         WHERE lead_notified_at IS NULL
+         ORDER BY id DESC
+         LIMIT ?`,
+      )
+      .all(limit) as BusinessSignalNewLead[];
+
+    const pendingRows = db
+      .prepare(
+        `SELECT o.id AS order_id, o.customer_id, c.name AS customer_name, c.phone AS customer_phone,
+                o.amount, o.sepay_invoice, o.created_at,
+                (julianday('now') - julianday(o.created_at)) * 24.0 AS hours_pending
+         FROM orders o
+         JOIN customers c ON c.id = o.customer_id
+         WHERE o.status = 'pending' AND o.sepay_invoice IS NOT NULL
+           AND datetime(o.created_at) < datetime('now', ?)
+         ORDER BY datetime(o.created_at) ASC
+         LIMIT ?`,
+      )
+      .all(`-${thresholdHours} hours`, limit) as Array<
+      BusinessSignalPendingOrder & { hours_pending: number }
+    >;
+
+    let markedPaid = 0;
+    let markedLead = 0;
+    if (opts.markNotified) {
+      if (paidRows.length) {
+        const ids = paidRows.map((r) => r.order_id);
+        const placeholders = ids.map(() => "?").join(",");
+        const r = db
+          .prepare(
+            `UPDATE orders SET paid_notified_at = datetime('now') WHERE id IN (${placeholders})`,
+          )
+          .run(...ids);
+        markedPaid = r.changes;
+      }
+      if (leadRows.length) {
+        const ids = leadRows.map((r) => r.customer_id);
+        const placeholders = ids.map(() => "?").join(",");
+        const r = db
+          .prepare(
+            `UPDATE customers SET lead_notified_at = datetime('now') WHERE id IN (${placeholders})`,
+          )
+          .run(...ids);
+        markedLead = r.changes;
+      }
+    }
+
+    return {
+      generated_at: generatedAt,
+      paid_orders: paidRows,
+      new_leads: leadRows,
+      stuck_pending_orders: pendingRows.map((r) => ({
+        order_id: Number(r.order_id),
+        customer_id: Number(r.customer_id),
+        customer_name: r.customer_name,
+        customer_phone: r.customer_phone ?? null,
+        amount: Number(r.amount),
+        sepay_invoice: r.sepay_invoice ?? null,
+        created_at: String(r.created_at),
+        hours_pending: Number(Number(r.hours_pending).toFixed(2)),
+      })),
+      marked_paid_notified: markedPaid,
+      marked_lead_notified: markedLead,
+    };
+  });
+  return tx();
 }

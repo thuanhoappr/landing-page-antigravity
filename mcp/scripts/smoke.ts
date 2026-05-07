@@ -26,7 +26,12 @@ async function main() {
   const listed = await client.request({ method: "tools/list", params: {} }, ListToolsResultSchema);
   const names = listed.tools.map((t) => t.name).sort();
   console.log("tools/list:", names);
-  const need = ["get_daily_ops_digest", "confirm_order_paid_by_invoice", "create_customer_from_telegram"];
+  const need = [
+    "get_daily_ops_digest",
+    "confirm_order_paid_by_invoice",
+    "create_customer_from_telegram",
+    "get_business_signals",
+  ];
   for (const n of need) {
     if (!names.includes(n)) {
       throw new Error(`Missing tool: ${n}`);
@@ -72,6 +77,22 @@ async function main() {
     CallToolResultSchema,
   );
   console.log("\n--- create_customer_from_telegram ---\n", create.content[0]?.type === "text" ? create.content[0].text : create);
+
+  // Preview only (mark_notified=false) để smoke test không tiêu thụ tín hiệu thực.
+  const signals = await client.request(
+    {
+      method: "tools/call",
+      params: {
+        name: "get_business_signals",
+        arguments: { pending_threshold_hours: 3, mark_notified: false, limit_per_signal: 5 },
+      },
+    },
+    CallToolResultSchema,
+  );
+  console.log(
+    "\n--- get_business_signals (preview, mark_notified=false) ---\n",
+    signals.content[0]?.type === "text" ? signals.content[0].text : signals,
+  );
 
   await transport.close();
   console.log("\nSmoke OK.");

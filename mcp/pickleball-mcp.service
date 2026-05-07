@@ -8,6 +8,11 @@ WorkingDirectory=/opt/pickleball-landing/mcp
 Environment=NODE_ENV=production
 # brainDb nằm ở ../src/lib — Node resolve native deps từ mcp/node_modules
 Environment=NODE_PATH=/opt/pickleball-landing/mcp/node_modules
+# Buộc MCP dùng cùng SQLite với website (tránh lệch Postgres/SQLite).
+Environment=BRAIN_DB_PATH=/opt/pickleball-landing/data/brain.db
+Environment=POSTGRES_URL=
+Environment=DATABASE_URL=
+Environment=STORAGE_URL=
 # Chứa POSTGRES_URL hoặc BRAIN_DB_PATH, RESEND_*, v.v. (cùng nội dung với app Next)
 EnvironmentFile=-/opt/pickleball-landing/mcp.env
 # Cần `npm ci` trong thư mục mcp trước; dùng npm từ PATH hoặc đổi thành đường dẫn tuyệt đối

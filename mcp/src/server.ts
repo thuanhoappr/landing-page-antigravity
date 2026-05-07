@@ -12,7 +12,7 @@ import { z } from "zod";
 import brainDb from "../../src/lib/brainDb";
 import mcpCustomer from "../../src/lib/mcpCustomer";
 
-const { getDailyOpsDigest, getOrderViewBySepayInvoice, sepayIpnMarkPaid } = brainDb;
+const { getDailyOpsDigest, getOrderViewBySepayInvoice, sepayIpnMarkPaid, getBusinessSignals } = brainDb;
 const { createCustomerFromTelegram } = mcpCustomer;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -270,6 +270,68 @@ function buildMcpServer() {
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error(`[${ts()}] create_customer_from_telegram failed`, e);
+        return jsonResult({ success: false, error: "INTERNAL", message: msg });
+      }
+    },
+  );
+
+  server.registerTool(
+    "get_business_signals",
+    {
+      description:
+        "Lấy 3 loại tín hiệu kinh doanh để bot Coach PPR DM admin: (01) đơn vừa paid chưa nhắn, (02) lead mới chưa nhắn, (03) đơn pending có sepay_invoice quá ngưỡng giờ. Khi mark_notified=true, các paid_orders và new_leads trả về sẽ được set timestamp để tránh nhắn trùng ở lần poll sau.",
+      inputSchema: {
+        pending_threshold_hours: z
+          .number()
+          .min(0)
+          .max(168)
+          .optional()
+          .describe("Đơn pending quá X giờ thì coi là 'cần nhắc khách' (mặc định 3)."),
+        mark_notified: z
+          .boolean()
+          .optional()
+          .describe(
+            "Mặc định true. Đặt false khi chỉ muốn xem trước (preview) mà chưa muốn đánh dấu đã thông báo.",
+          ),
+        limit_per_signal: z
+          .number()
+          .int()
+          .min(1)
+          .max(50)
+          .optional()
+          .describe("Số bản ghi tối đa cho mỗi loại tín hiệu (mặc định 10)."),
+      },
+    },
+    async (args) => {
+      const pendingThresholdHours = args.pending_threshold_hours ?? 3;
+      const markNotified = args.mark_notified === undefined ? true : Boolean(args.mark_notified);
+      const limitPerSignal = args.limit_per_signal ?? 10;
+      logTool("get_business_signals", {
+        pending_threshold_hours: pendingThresholdHours,
+        mark_notified: markNotified,
+        limit_per_signal: limitPerSignal,
+      });
+      try {
+        const signals = await getBusinessSignals({
+          pendingThresholdHours,
+          markNotified,
+          limitPerSignal,
+        });
+        const totalActionable =
+          signals.paid_orders.length +
+          signals.new_leads.length +
+          signals.stuck_pending_orders.length;
+        return jsonResult({
+          success: true,
+          message:
+            totalActionable === 0
+              ? "Không có tín hiệu mới."
+              : `Có ${signals.paid_orders.length} paid mới, ${signals.new_leads.length} lead mới, ${signals.stuck_pending_orders.length} đơn pending cần nhắc.`,
+          data: signals,
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error(`[${ts()}] get_business_signals failed`, e);
         return jsonResult({ success: false, error: "INTERNAL", message: msg });
       }
     },
