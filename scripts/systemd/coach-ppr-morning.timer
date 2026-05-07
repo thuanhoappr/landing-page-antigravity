@@ -1,0 +1,11 @@
+[Unit]
+Description=Coach PPR báo cáo sáng — 08:00 hằng ngày (Asia/Ho_Chi_Minh)
+After=mcp-server.service
+
+[Timer]
+OnCalendar=*-*-* 08:00:00 Asia/Ho_Chi_Minh
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

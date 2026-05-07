@@ -1,0 +1,12 @@
+[Unit]
+Description=Coach PPR instant alert mỗi 5 phút
+After=mcp-server.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=15s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -16,7 +16,7 @@ Tài liệu này ghi lại cấu hình, quy trình vận hành, và procedure ro
 | Bot quyền trong group | Admin với Delete + Pin + Change info (đủ dùng) |
 | MCP server | `https://admin.pickleball30phut.com/mcp` (proxy qua Caddy → 127.0.0.1:3001) |
 | MCP tool prefix | `biz__` |
-| MCP tools available | `biz__get_daily_ops_digest`, `biz__confirm_order_paid_by_invoice`, `biz__create_customer_from_telegram` |
+| MCP tools available | `biz__get_daily_ops_digest`, `biz__confirm_order_paid_by_invoice`, `biz__create_customer_from_telegram`, `biz__get_business_signals` |
 
 ---
 
@@ -119,7 +119,65 @@ Nếu sau này có người phụ vận hành (ví dụ trợ lý), cập nhật
 
 ---
 
-## 9. Thông tin liên hệ kỹ thuật
+## 9. Tín hiệu kinh doanh chủ động (Proactive DM)
+
+Bot DM **riêng** với admin (Hoá Trần, `8616188982`) khi phát hiện:
+
+| Tín hiệu | Trigger | Tool gọi | Ngưỡng |
+|---|---|---|---|
+| **01** Đơn vừa paid | Có `orders.status='paid'` chưa thông báo (`paid_notified_at IS NULL`) | `biz__get_business_signals` | Mỗi 5 phút |
+| **02** Lead mới đăng ký | Có `customers` chưa thông báo (`lead_notified_at IS NULL`) | `biz__get_business_signals` | Mỗi 5 phút |
+| **03** Báo cáo sáng | Tổng hợp 24h qua + đơn pending > 3h | `biz__get_daily_ops_digest` | 8:00 sáng (cron `0 8 * * *`) |
+
+### Cơ chế chống nhắn trùng (idempotency)
+- `biz__get_business_signals` mặc định `mark_notified=true`: ngay khi trả về paid_orders/new_leads, nó set `paid_notified_at = NOW()` / `lead_notified_at = NOW()` trong cùng transaction.
+- Lần poll tiếp theo sẽ KHÔNG trả lại các bản ghi đã thông báo.
+- Khi mới enable lần đầu: backfill tự động đánh dấu mọi bản ghi cũ > 1 giờ là "đã thông báo" để tránh spam toàn bộ DB lịch sử.
+
+### Cấu hình scheduled task trong goClaw
+1. **Task A — Instant alert (5 phút):**
+   - Cron: `*/5 * * * *`
+   - Tool call: `biz__get_business_signals` với `pending_threshold_hours=3, mark_notified=true, limit_per_signal=10`
+   - Prompt sau khi gọi: nếu `paid_orders` hoặc `new_leads` không rỗng → DM tới `chat_id=8616188982` với format ngắn:
+     - `💰 Đơn paid mới: PB-{invoice} — {customer_name} — {amount}đ ({product_name})`
+     - `🆕 Lead mới: {name} — {phone} — {email or "-"}`
+   - Nếu cả hai rỗng → im lặng, KHÔNG gửi gì.
+2. **Task B — Báo cáo sáng (8h):**
+   - Cron: `0 8 * * *` (timezone Asia/Ho_Chi_Minh — chú ý setting trên goClaw)
+   - Tool call: `biz__get_daily_ops_digest`
+   - Prompt: format Báo cáo sáng `📊 BÁO CÁO 24h QUA` gồm: số lead mới, paid/pending/cancelled, đơn pending > 3h cần nhắc, tồn kho thấp, email queue overdue → DM tới `chat_id=8616188982`.
+
+### Test idempotency thủ công
+```bash
+# Trên VPS, từ session MCP đã init:
+curl -sS -X POST http://127.0.0.1:3001/mcp \
+  -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" \
+  -H "mcp-session-id: $SID" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_business_signals",
+       "arguments":{"pending_threshold_hours":3,"mark_notified":false,"limit_per_signal":5}}}'
+```
+`mark_notified=false` → preview không tiêu thụ tín hiệu.
+
+---
+
+## 10. Vận hành DB & deploy
+
+- **Brain DB nằm tại** `/opt/pickleball-landing/data/brain.db` (Docker bind mount → `/app/data` trong container Next.js, đồng thời MCP service đọc trực tiếp qua `BRAIN_DB_PATH`).
+- **Bài học deploy (May 7, 2026):** `git stash push -u` (untracked) khi pull code đã từng xóa thư mục `data/` vì nó chưa nằm trong `.gitignore`. Đã fix:
+  - `.gitignore` thêm `/data/` (giữ `.gitkeep` để bind mount target tồn tại).
+  - Script deploy nên dùng `git stash` (không `-u`) hoặc `git pull --ff-only` trên repo sạch.
+- Khi recover sau khi mất `/opt/pickleball-landing/data/brain.db`:
+  ```bash
+  mkdir -p /opt/pickleball-landing/data
+  docker exec pickleball-landing-landing-1 cat /app/brain.db > /opt/pickleball-landing/data/brain.db
+  chown -R 1001:1001 /opt/pickleball-landing/data && chmod -R 775 /opt/pickleball-landing/data
+  cd /opt/pickleball-landing && docker compose up -d --force-recreate landing
+  systemctl restart mcp-server
+  ```
+
+---
+
+## 11. Thông tin liên hệ kỹ thuật
 
 - VPS production: `103.97.127.221:2018`
 - Repo code: GitHub `thuanhoappr/landing-page-antigravity`
@@ -127,4 +185,4 @@ Nếu sau này có người phụ vận hành (ví dụ trợ lý), cập nhật
 
 ---
 
-_Last updated: May 7, 2026_
+_Last updated: May 7, 2026 (added §9 proactive signals + §10 DB ops)_

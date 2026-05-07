@@ -46,5 +46,7 @@ resend_config.txt.txt
 *.tsbuildinfo
 next-env.d.ts
 
-# local MCP / SQLite smoke DB
-/data/brain-mcp-test.db
+# Production SQLite data (Docker bind mount /opt/pickleball-landing/data on VPS,
+# /data/brain-mcp-test.db trong dev). Tránh git stash -u xóa brain.db khi pull code.
+/data/
+!/data/.gitkeep

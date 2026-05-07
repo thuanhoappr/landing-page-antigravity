@@ -1,0 +1,12 @@
+[Unit]
+Description=Coach PPR instant alert (paid + lead) — gọi MCP và DM admin Telegram
+After=network.target mcp-server.service
+Requires=mcp-server.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/pickleball-landing
+EnvironmentFile=-/opt/pickleball-landing/coach-ppr-bot.env
+ExecStart=/usr/bin/python3 /opt/pickleball-landing/scripts/coach_ppr_alert.py --mode instant
+StandardOutput=journal
+StandardError=journal
