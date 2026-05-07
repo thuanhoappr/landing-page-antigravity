@@ -1,0 +1,15 @@
+Sáng nay website mình còn chạy trên Vercel.  
+Chiều tối nay đã chuyển qua VPS của chính mình, dùng database thật.
+
+Nghe thì kỹ thuật, nhưng cảm giác thật ra rất đời thường: nhẹ đầu hơn hẳn.
+
+Mình ngồi quán cà phê, chỉ nhắn 1 câu Telegram: “Cho tôi bản tin vận hành 24h”.  
+Bot trả về ngay số khách mới, trạng thái đơn, thanh toán pending, tồn kho, hàng đợi email. Không cần mở laptop, không cần đăng nhập admin, vẫn nắm được tình hình thật của business.
+
+Lần đầu mình thấy rõ một chuyện: AI không chỉ “nói cho vui” nữa, mà đã bắt đầu LÀM việc thật.
+
+Cái mình thích nhất không phải là “xịn”, mà là cảm giác kiểm soát và tự do.  
+Mình vẫn đang ở ngoài đường, vẫn có thể vận hành được công việc của mình.
+
+Cảm ơn anh Dương Trọng Nghĩa vì chuỗi thử thách này, rất thực chiến và mở ra đúng thứ mình đang cần lúc này:  
+[Dương Trọng Nghĩa](https://www.facebook.com/duongtrongnghia.theKP3/)
