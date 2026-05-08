@@ -85,12 +85,14 @@ Bot output **3 mẫu DM** (Zalo/Email/Soft Sell) + box "Mẹo nhỏ từ Coach C
 - [ ] Facebook bài public + tag `Dương Trọng Nghĩa` (https://www.facebook.com/duongtrongnghia.theKP3/)
 - [ ] Kênh thứ 2 (Zalo cá nhân / Threads / LinkedIn / fanpage / blog…)
 
-**Điền link sau khi đăng:**
+**Đã đăng (Coach PPR):**
 
-| Kênh | Link |
-|------|------|
-| Facebook | *(dán URL sau khi đăng)* |
-| Kênh 2 | *(dán URL sau khi đăng)* |
+| Kênh / bài | Link |
+|------------|------|
+| Bài 1 (Facebook share) | [https://www.facebook.com/share/p/1Ctu2StGp2/](https://www.facebook.com/share/p/1Ctu2StGp2/) |
+| Bài 2 (Facebook share) | [https://www.facebook.com/share/p/1CuN9G2V8F/](https://www.facebook.com/share/p/1CuN9G2V8F/) |
+
+> Cả 2 link dạng `facebook.com/share/p/...` (bài public). Nếu SOP yêu cầu chặt 1 Facebook + 1 kênh khác (không phải Facebook), bổ sung thêm Threads / Zalo / fanpage.
 
 ---
 
@@ -106,8 +108,8 @@ Nộp bài Ngày 16 — Tự tay tạo Skill:
 4. Skill chạy trong Antigravity (@SKILL.md): [link ảnh]
 5. Skill chạy trên goClaw qua Telegram: [link ảnh]
 6. Link bài đăng:
-   - Facebook (đã tag mentor): [URL]
-   - Kênh 2: [URL]
+   - Bài 1: https://www.facebook.com/share/p/1Ctu2StGp2/
+   - Bài 2: https://www.facebook.com/share/p/1CuN9G2V8F/
 
 Repo GitHub: https://github.com/thuanhoappr/landing-page-antigravity (commit Day 16)
 
