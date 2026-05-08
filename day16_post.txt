@@ -1,0 +1,19 @@
+Hôm nay là ngày 16. Mình đóng gói tri thức của mình thành 1 file MD — và agent dùng được.
+
+Trước giờ mỗi lần có lead mới, mình ngồi soạn DM tay. Tone phải đúng "Coach Culi", phải có quà tặng phù hợp, phải kết bằng câu hỏi mở chứ không gửi link bừa. Chuyện 5 phút mỗi lead, một ngày 5 lead là 25 phút.
+
+Hôm nay mình viết 1 file SKILL.md — chỉ markdown thuần, không code, không gì cả. File ghi rõ: chia lead thành 4 nhóm (bận rộn / ngại ra sân / phụ huynh / chưa rõ), mỗi nhóm dùng quà tặng nào, cấu trúc DM theo 4 đoạn, từ nào nên dùng, từ nào cấm.
+
+Upload lên goClaw. Telegram nhắn bot:
+"Soạn DM lead mới: Nguyễn Văn A · 0901234567"
+
+Bot trả ra 3 mẫu DM tử tế — Zalo / Email / Soft Sell — kèm note "Mẹo nhỏ: lead nhắn trong 5-15 phút thì tỷ lệ chốt cao gấp 3 lần". Mình đọc, thấy đúng tone mình hay viết, đúng quà tặng mình hay gợi ý, kết bằng câu hỏi mở.
+
+Hai mươi lăm phút xuống còn 30 giây.
+
+Cái mình thích nhất không phải là "tiết kiệm thời gian". Mà là cảm giác tri thức của mình có hình dạng. Trước giờ nó nằm trong đầu — mình biết nhưng không truyền được cho ai. Hôm nay nó là 1 file 7 KB, ai có agent là dùng được.
+
+Đây là thứ mà chỉ trước hôm nay mình tưởng phải lập trình mới làm được. Hoá ra không. Chỉ cần biết viết — và biết viết cho rõ.
+
+Cảm ơn anh Dương Trọng Nghĩa và Angravity vì bài tập ngày 16 — bài này là cú chốt: AI không chỉ làm được, mà còn LẶP LẠI được theo đúng cách của mình:
+[Dương Trọng Nghĩa](https://www.facebook.com/duongtrongnghia.theKP3/)
