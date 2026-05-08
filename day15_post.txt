@@ -1,0 +1,23 @@
+Hôm nay là ngày 15 của thử thách. Lần đầu mình thấy AI tự kêu mình.
+
+Sáng làm cà phê. 11h41, có khách điền form trên website. Mình không biết. Vẫn đang khuấy ly, chưa mở laptop, chưa mở admin.
+
+11h42, điện thoại rung. Telegram bật tin:
+🆕 Lead mới (1): Test Day15 · 0900000915 · ...
+
+Bot tự kêu. Mình không hỏi gì cả.
+
+Đó là cảm giác lạ. Trước giờ mình phải đi tìm việc — mở dashboard, mở admin, mở DB, mở email. Hôm nay việc tự đi tìm mình.
+
+Không chỉ là "bot báo có lead". Nó là cảm giác mình có 1 người thay mình trông coi cửa hàng, mà người đó:
+• Im lặng cả ngày, không spam.
+• Chỉ kêu khi có việc thật — đơn paid mới, khách mới, đơn pending quá lâu.
+• 8h sáng tự gửi báo cáo 24h: bao nhiêu lead, bao nhiêu đơn paid, bao nhiêu đơn còn treo.
+• Không nhắn 2 lần cùng 1 việc.
+
+Mình từng nghĩ AI là "gõ vào nó câu hỏi, nó trả lời". Hôm nay mình nhận ra: AI đáng giá nhất là khi nó nói trước khi mình kịp hỏi.
+
+Giống như có nhân viên giỏi mà không phải trả lương — chỉ khác là không nghỉ phép, không quên, và không ngại nhắc.
+
+Cảm ơn anh Dương Trọng Nghĩa và Angravity vì bài tập ngày 15 — bài này thay đổi cách mình nhìn AI:
+[Dương Trọng Nghĩa](https://www.facebook.com/duongtrongnghia.theKP3/)
