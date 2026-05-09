@@ -47,6 +47,8 @@ Nếu Coach không nói mode → hỏi 1 câu: *"Anh muốn Mode 1 (bài organic
 
 ## Mode 1 — Content Free (organic)
 
+> **Bắt buộc:** mọi lần chạy Mode 1 phải xuất **đủ 4 section** dưới đây — Caption, Hashtag, Prompt ảnh (English), Checklist. Thiếu 1 section nào → coi như **fail**, agent **phải tự bổ sung** trước khi kết thúc turn (không đợi user nhắc).
+
 **Output** theo đúng thứ tự:
 
 ```markdown
@@ -69,6 +71,8 @@ Nếu Coach không nói mode → hỏi 1 câu: *"Anh muốn Mode 1 (bài organic
 ---
 
 ## Mode 2 — Creative Ads
+
+> **Bắt buộc:** mọi lần chạy Mode 2 phải xuất **đủ 6 section** — Headline, Primary text, Description, CTA button label, Prompt ảnh (English), Lưu ý. Thiếu section → tự bổ sung trước khi kết thúc turn.
 
 **Output** (để Coach paste vào Ads Manager — **không** tự chạy ads):
 
