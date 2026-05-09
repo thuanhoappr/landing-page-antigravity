@@ -1,0 +1,16 @@
+Hôm nay là ngày 17. Mình thử dùng AI viết bài Facebook cho mình — và lần đầu thấy nó hiểu mình thật.
+
+Trước giờ mỗi lần soạn bài cho fanpage Pickleball 30 phút, mình ngồi cả buổi. Nghĩ Hook, gõ caption, mở Canva tìm template, đổi font tiếng Việt, đổi màu, gắn logo, gắn ảnh thật của mình lúc đánh sân… Một bài 1 tiếng là chuyện thường.
+
+Hôm nay mình viết 1 file SKILL.md — chỉ markdown thuần. File ghi rõ: bot không được tạo ảnh tiếng Việt bằng DALL·E (sai chính tả nặng), thay vào đó xuất "Canva Spec Sheet" 9 mục — Hook, Sub, 5 bullet, Quote, Brand, Slot ảnh, Color/Font, Template, Check. Mình paste vào Canva 5 phút có ảnh đẹp. Còn caption thì bot viết sẵn ngắn gọn 80 từ, hashtag chuẩn brand.
+
+Telegram nhắn bot: "Mode 1, góc lỗi nhập môn dân văn phòng". Bot trả ra full 4 phần — đúng giọng mình hay viết, đúng góc nhìn coach, có ảnh thật chứ không phải hoạt hình AI nhìn giả trân.
+
+Một tiếng xuống còn 10 phút.
+
+Cái mình thích nhất không phải là "bài đẹp hơn", mà là cảm giác có cái khung của riêng mình — bot không tự sáng tạo lung tung, nó bám đúng giọng Pickleball 30 phút mà mình đã dạy nó. Trước giờ kiến thức marketing nằm trong đầu — mình biết nhưng không truyền được cho bot. Hôm nay nó là 1 file 8 KB, mỗi lần đăng bài là dùng được.
+
+Đây là thứ mà cách đây 17 ngày mình tưởng phải thuê copywriter chuyên nghiệp mới làm được. Hoá ra không. Chỉ cần biết viết — và biết viết quy tắc cho rõ.
+
+Cảm ơn Dương Trọng Nghĩa và Angravity vì bài tập ngày 17 — bài này là cú chốt: AI không chỉ "nói cho vui", mà còn TẠO RA NỘI DUNG đúng chất của mình:
+[Dương Trọng Nghĩa](https://www.facebook.com/duongtrongnghia.theKP3/)
