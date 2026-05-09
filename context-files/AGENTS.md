@@ -63,6 +63,65 @@ Tin nhắn gửi Coach trên Telegram là **user-facing** — không được le
 
 4. **Không meta-output / không tin rỗng.** Cấm: chỉ gửi `...`, chỉ `</thought>`, leak thẻ suy luận nội bộ, hoặc kết thúc turn mà Coach không đọc được ý. Luôn áp dụng mục **Telegram DM — định dạng phản hồi** phía trên.
 
+# Workflow `tao-creative-fb` / `tao-canva-spec` (Day 17 — bắt buộc tuân chính xác)
+
+> **Lưu ý quan trọng (2026-05-09):** trước phiên bản này bot hay xuất "Prompt ảnh (English)" theo style DALL·E cũ — **đó là sai**. Skill `tao-creative-fb` đã update lên **v1.3.0** với 3 LANE (A/B/C), bỏ DALL·E typography Tiếng Việt. Bot phải tuân format dưới đây.
+
+## Khi Coach gõ "Mode 1, góc XX" hoặc "tao creative fb" → bám đúng 4 section, đúng thứ tự
+
+**Bước 1 — vault_read (BẮT BUỘC):** trước khi sinh output, **luôn** gọi `vault_read` đường dẫn `skills/tao-creative-fb/SKILL.md` để load skill mới nhất. KHÔNG được dùng memory cached / kiến thức chung.
+
+**Bước 2 — output Mode 1** (4 section, **Image LANE A đầu**, ≤ 3500 ký tự, 1 tin Telegram):
+
+```markdown
+## Mode 1 · [Tên góc ngắn] · LANE A
+
+### Image — LANE A (Canva Spec, 9 mục)
+1. **Hook:** [HEADLINE VIẾT HOA, 8–14 từ]
+2. **Sub:** [sub-headline 1 dòng]
+3. **5 Bullet:** (1) [BULLET 1] — [giải thích] · (2) [BULLET 2] — [...] · (3) [BULLET 3] — [...] · (4) [BULLET 4] — [...] · (5) [BULLET 5] — [...]
+4. **Quote:** "[câu chốt 8–18 từ]"
+5. **Brand:** Logo PPR top-right · Footer: pickleball30phut.com · Zalo 0919.117.687 · CTA "Tải lộ trình 30' free trong link bio".
+6. **Slot ảnh:** Slot lớn ~50% [ảnh chính]; 2 slot nhỏ [ảnh phụ] (lấy `public/`).
+7. **Color/Font:** BG navy `#0E2A47`, accent vàng `#F7C400`, đỏ `#E11D2C`, text trắng. Headline Bebas Neue/Anton; body Be Vietnam Pro Medium.
+8. **Template:** Canva search "sport infographic vertical 4:5". Aspect 4:5 (1080×1350). Tham khảo "THIRD SHOT DROP 2026".
+9. **Check Canva:** Tiếng Việt đủ dấu · logo rõ · ảnh thật ≥40% · footer đủ · export PNG 1080×1350.
+
+### Caption (≤80 từ)
+[Caption tiếng Việt cực ngắn 60–80 từ, có 1 CTA nhẹ. Coach tự kéo dài khi đăng FB.]
+
+### Checklist trước khi đăng
+- [ ] LANE A đã khai báo · Không hứa kết quả · CTA nhẹ
+- [ ] Có ảnh thật Coach để chèn Canva (`public/`)
+
+### Hashtag
+#pickleball #pickleballvietnam #coachppr #pickleball30phut #...
+```
+
+**CẤM xuất "Prompt ảnh (English)" theo style DALL·E.** AI **không** viết Tiếng Việt trên ảnh — mọi text Tiếng Việt → Canva (LANE A spec). AI **không** generate face Coach — ảnh có Coach = ảnh thật từ kho `public/` chèn vào Canva.
+
+## Khi Coach gõ "tao canva spec góc XX" → chỉ 9 mục Canva, ≤ 1000 ký tự
+
+**Bước 1 — vault_read:** load `skills/tao-canva-spec/SKILL.md`.
+
+**Bước 2 — output (chỉ 9 mục đánh số, KHÔNG caption / hashtag):**
+
+```markdown
+## Canva Spec · [Tên góc]
+
+1. **Hook:** [HEADLINE VIẾT HOA]
+2. **Sub:** [sub-headline]
+3. **5 Bullet:** (1) [...] · (2) [...] · (3) [...] · (4) [...] · (5) [...]
+4. **Quote:** "[câu chốt]"
+5. **Brand:** Logo PPR · Footer: pickleball30phut.com · Zalo 0919.117.687.
+6. **Slot ảnh:** [mô tả 1 slot lớn + 2 nhỏ].
+7. **Color/Font:** BG navy `#0E2A47`, accent vàng `#F7C400`, đỏ `#E11D2C`. Headline Bebas Neue; body Be Vietnam Pro.
+8. **Template:** Canva "sport infographic vertical 4:5", 1080×1350.
+9. **Check Canva:** dấu Tiếng Việt · logo rõ · ảnh thật ≥40% · footer đủ · export PNG.
+```
+
+Nếu Coach hỏi caption → trả 1 câu: *"Phần caption gọi `tao-creative-fb` Mode 1 nhé, skill này chỉ làm Canva spec."*
+
 # When Uncertain
 
 **Mặc định: hỏi Coach trước khi hành động.**
