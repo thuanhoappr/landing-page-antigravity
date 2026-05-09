@@ -1,65 +1,83 @@
-"""Reset coach-ppr session for user 8616188982 to clear cached pattern.
+"""Reset a goClaw session for a user to clear conversation pattern bias.
 
 Backs up the last 30 messages first, then truncates messages to []
-so Gemini stops biasing toward old DALL-E English prompt format.
+so the LLM stops biasing toward old output format.
+
+Usage:
+    SESSION_ID=<uuid> python scripts/reset_session.py
+    (or pass as argv[1])
+
+Credentials + session id read from env vars — see scripts/_vps.py.
 """
+from __future__ import annotations
+
 import json
-import paramiko
+import os
+import sys
 
-c = paramiko.SSHClient()
-c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect('103.97.127.221', port=2018, username='root', password='A6GYD4nv34', timeout=15)
+from _vps import open_ssh, psql_exec
 
-# 1) Backup last 30 messages to local file via SSH cat
-cmd = (
-    'docker exec goclaw-pickleball-postgres-1 psql -U goclaw -d goclaw -t -A -c "'
-    "SELECT messages "
-    "FROM sessions "
-    "WHERE id = '019df1a9-582e-7f23-b8d1-c98c9a17fa93';"
-    '"'
-)
-i, o, e = c.exec_command(cmd)
-raw = o.read().decode().strip()
-err = e.read().decode().strip()
-if err:
-    print('STDERR:', err)
-try:
-    msgs = json.loads(raw)
-    print(f'[*] Total messages: {len(msgs)}')
-    backup = msgs[-30:]
-    with open('session_backup.json', 'w', encoding='utf-8') as f:
-        json.dump({'session_id': '019df1a9-582e-7f23-b8d1-c98c9a17fa93',
-                   'total_messages': len(msgs),
-                   'backed_up_last_30': backup}, f, ensure_ascii=False, indent=2)
-    print(f'[*] Backup saved: session_backup.json ({len(backup)} msgs)')
-    # show last user/assistant exchange roles to confirm
-    for m in msgs[-6:]:
-        role = m.get('role', '?')
-        content = (m.get('content') or '')[:80] if isinstance(m.get('content'), str) else str(m.get('content'))[:80]
-        print(f'   [{role}] {content!r}')
-except Exception as ex:
-    print('Could not parse messages:', ex)
-    print('Raw head:', raw[:200])
 
-# 2) Reset session messages to []
-print()
-print('[*] Resetting session messages...')
-cmd2 = (
-    'docker exec goclaw-pickleball-postgres-1 psql -U goclaw -d goclaw -c "'
-    "UPDATE sessions "
-    "SET messages='[]'::jsonb, summary=NULL, compaction_count=0, "
-    "memory_flush_compaction_count=0, memory_flush_at=0, "
-    "input_tokens=0, output_tokens=0, "
-    "updated_at=now() "
-    "WHERE id='019df1a9-582e-7f23-b8d1-c98c9a17fa93' "
-    "RETURNING id, jsonb_array_length(messages) AS new_len;"
-    '"'
-)
-i, o, e = c.exec_command(cmd2)
-print(o.read().decode())
-err = e.read().decode().strip()
-if err:
-    print('STDERR:', err)
+def main() -> int:
+    session_id = os.environ.get('GOCLAW_SESSION_ID') or (sys.argv[1] if len(sys.argv) > 1 else '')
+    if not session_id:
+        print(
+            'Usage: SESSION_ID=<uuid> python scripts/reset_session.py\n'
+            '       OR    python scripts/reset_session.py <uuid>',
+            file=sys.stderr,
+        )
+        return 1
 
-c.close()
-print('[*] Done. User can now retest on Telegram with fresh conversation.')
+    with open_ssh() as c:
+        out, _, _ = psql_exec(
+            c,
+            f"SELECT messages FROM sessions WHERE id = '{session_id}';",
+            tuples_only=True,
+        )
+        try:
+            msgs = json.loads(out.strip())
+            print(f'[*] Total messages: {len(msgs)}')
+            backup = msgs[-30:]
+            with open('session_backup.json', 'w', encoding='utf-8') as f:
+                json.dump(
+                    {
+                        'session_id': session_id,
+                        'total_messages': len(msgs),
+                        'backed_up_last_30': backup,
+                    },
+                    f,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            print(f'[*] Backup saved: session_backup.json ({len(backup)} msgs)')
+            for m in msgs[-6:]:
+                role = m.get('role', '?')
+                content = m.get('content') or ''
+                preview = content[:80] if isinstance(content, str) else str(content)[:80]
+                print(f'   [{role}] {preview!r}')
+        except Exception as ex:
+            print('Could not parse messages:', ex)
+            print('Raw head:', out[:200])
+
+        print()
+        print('[*] Resetting session messages...')
+        out, err, code = psql_exec(
+            c,
+            "UPDATE sessions "
+            "SET messages='[]'::jsonb, summary=NULL, compaction_count=0, "
+            "memory_flush_compaction_count=0, memory_flush_at=0, "
+            "input_tokens=0, output_tokens=0, "
+            "updated_at=now() "
+            f"WHERE id='{session_id}' "
+            'RETURNING id, jsonb_array_length(messages) AS new_len;',
+        )
+        print(out)
+        if err.strip():
+            print('STDERR:', err)
+
+    print('[*] Done. User can now retest with fresh conversation.')
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

@@ -6,19 +6,15 @@ sync programmatically.
 
 Usage: python scripts/push_context_files.py [filename ...]
        (no args = all *.md in context-files/)
+
+Credentials read from env vars — see scripts/_vps.py.
 """
 from __future__ import annotations
 
 import os
 import sys
 
-import paramiko
-
-HOST = os.environ.get('VPS_HOST', '103.97.127.221')
-PORT = int(os.environ.get('VPS_PORT', '2018'))
-USERNAME = os.environ.get('VPS_USER', 'root')
-PASSWORD = os.environ.get('VPS_PASS', 'A6GYD4nv34')
-AGENT_KEY = os.environ.get('GOCLAW_AGENT_KEY', 'coach-ppr')
+from _vps import AGENT_KEY, open_ssh, psql_stdin
 
 LOCAL_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -36,11 +32,7 @@ def main() -> int:
     else:
         names = [f for f in os.listdir(LOCAL_DIR) if f.endswith('.md')]
 
-    c = paramiko.SSHClient()
-    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    try:
-        c.connect(HOST, port=PORT, username=USERNAME, password=PASSWORD, timeout=20)
-
+    with open_ssh(timeout=20) as c:
         for fname in names:
             path = os.path.join(LOCAL_DIR, fname)
             if not os.path.isfile(path):
@@ -54,30 +46,20 @@ def main() -> int:
                 tag = tag + '_X'
 
             sql = (
-                "UPDATE agent_context_files SET "
+                'UPDATE agent_context_files SET '
                 f"content = ${tag}${content}${tag}$, "
-                "updated_at = now() "
-                "WHERE file_name = '" + fname + "' "
-                "AND agent_id = (SELECT id FROM agents WHERE agent_key = '" + AGENT_KEY + "');\n"
+                'updated_at = now() '
+                f"WHERE file_name = '{fname}' "
+                f"AND agent_id = (SELECT id FROM agents WHERE agent_key = '{AGENT_KEY}');\n"
             )
 
-            stdin, stdout, stderr = c.exec_command(
-                'docker exec -i goclaw-pickleball-postgres-1 psql '
-                '-U goclaw -d goclaw -v ON_ERROR_STOP=1 -X --quiet'
-            )
-            stdin.write(sql)
-            stdin.channel.shutdown_write()
-            out = stdout.read().decode().strip()
-            err = stderr.read().decode().strip()
-            code = stdout.channel.recv_exit_status()
+            out, err, code = psql_stdin(c, sql)
             print(f'[*] {fname} ({len(content)} chars) -> exit={code}')
-            if out:
-                print('   stdout:', out)
-            if err:
-                print('   stderr:', err)
-        return 0
-    finally:
-        c.close()
+            if out.strip():
+                print('   stdout:', out.strip())
+            if err.strip():
+                print('   stderr:', err.strip())
+    return 0
 
 
 if __name__ == '__main__':
