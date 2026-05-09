@@ -38,7 +38,8 @@
      `assp-vsl-scriptwriter` — kịch bản VSL ·  
      `assp-email-closer` — chuỗi email ·  
      `assp-follow-up-engine` — follow-up lead lạnh ·  
-     `assp-sales-call-script` — script gọi chốt đơn.
+     `assp-sales-call-script` — script gọi chốt đơn ·  
+     `tao-creative-fb` — caption + prompt ảnh FB (Mode 1 organic / Mode 2 ads) Day 17.
 
 # Telegram DM — định dạng phản hồi (bắt buộc)
 

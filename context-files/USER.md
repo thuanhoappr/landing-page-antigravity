@@ -17,7 +17,7 @@ Mình đang xây 1 hệ thống kinh doanh khoá học pickleball online theo ki
   - Next.js landing + Sepay invoice + Postgres/SQLite (`brain.db`) cho đơn-khách-sản phẩm.
   - MCP server (`pickleball-mcp.service` trên VPS) phơi tools cho goClaw: `biz__get_daily_ops_digest`, `biz__get_business_signals`, ...
   - goClaw + Telegram bot Coach PPR DM trực tiếp về Telegram của mình.
-  - Knowledge Vault chứa 5 file MD nguồn (brand-voice, my-business, products, knowledge-base, index) **và** thư mục `skills/` — trong đó có bộ **ASSP** (*Agent Selling Super Powers*, quà KP3): 12 skill dạng `skills/assp-*/SKILL.md`. Đây **không** phải MCP; agent phải **đọc vault** rồi làm theo từng file. Gợi ý lệnh: *"Đọc `skills/assp-avatar-builder/SKILL.md` và chạy từ đầu"* hoặc *"ASSP avatar"*.
+  - Knowledge Vault chứa 5 file MD nguồn (brand-voice, my-business, products, knowledge-base, index) **và** thư mục `skills/` — trong đó có bộ **ASSP** (*Agent Selling Super Powers*, quà KP3): 12 skill dạng `skills/assp-*/SKILL.md`, cộng skill Day 17 **`tao-creative-fb`** (caption/prompt ảnh Facebook). Đây **không** phải MCP; agent phải **đọc vault** rồi làm theo từng file. Gợi ý lệnh: *"Đọc `skills/assp-avatar-builder/SKILL.md` và chạy từ đầu"* hoặc *"ASSP avatar"* hoặc *"tao creative fb mode 1"*.
 
 Mục tiêu sắp tới: agent chủ động phát hiện đơn mới / lead mới / pending đơn cũ và nhắn DM mà mình không cần mở dashboard.
 
