@@ -57,3 +57,6 @@ gpt-image-*-resp.json
 body.json
 probe*.json
 COMMIT_MSG.tmp
+
+# goClaw session backup khi reset (chứa lịch sử chat private)
+session_backup*.json
