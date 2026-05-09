@@ -87,6 +87,22 @@ Trong DM 1-1 với bot (chat riêng): các tool dùng tự nhiên, không cần 
 - **Mitigation hiện tại:** Bot đã pass test role-play impersonate (defense-in-depth). Khả năng leak data thấp.
 - **Đề xuất:** Trong 7 ngày đầu, kiểm tra log goClaw cuối ngày — nếu thấy MCP tool được trigger bởi `from.id ≠ 8616188982` → tắt bot ngay theo §5.1.
 
+### ASSP skills trong Vault (không phải MCP)
+
+Bộ **ASSP** (*Agent Selling Super Powers*) nằm dưới `skills/assp-*/` trong workspace vault (đồng bộ bằng `scripts/sync_skills.py`). Bot **không** có tool riêng tên “avatar builder”; model phải **`vault_search` / `vault_read`** các file `SKILL.md` đó.
+
+- **Triệu chứng:** Coach nhắn *“dùng avatar builder ASSP”* mà bot đáp *“không tìm thấy công cụ”* → context **AGENTS.md** trên goClaw chưa cập nhật hoặc agent không gọi vault.
+- **Sửa:** đẩy lại `context-files/AGENTS.md` + `USER.md` lên goClaw → Lưu System Prompt. Hoặc Coach nhắn trực tiếp: *“Đọc vault `skills/assp-avatar-builder/SKILL.md` và làm theo”*.
+
+### DM chỉ trả `...`, `</thought>`, hoặc tin rỗng
+
+Thường gặp khi model **Gemma** (vd `gemma-4-31b-it`) + chuỗi **vault / tool** — model lộ thẻ suy nghĩ nội bộ hoặc cắt hết nội dung.
+
+1. **goClaw → Coach PPR → đổi model** sang dòng **Claude** hoặc **GPT-4o** (ưu tiên model gọi tool/vault ổn định).
+2. Trong **Tệp → AGENTS.md**: giữ bản có mục **Telegram DM — định dạng phản hồi** (cấm `</thought>`, cấm chỉ `...`) → **Lưu** → **Triệu hồi lại**.
+3. goClaw **Session / log**: xem `vault_read` có timeout hay lỗi quyền không.
+4. Nếu có cấu hình **giới hạn độ dài tin Telegram / max tokens**: tăng dần (đừng để quá thấp).
+
 ### Cảnh báo goClaw API key
 Banner cảnh báo: "Tác vụ nền gặp lỗi: Xác thực thất bại (API key không hợp lệ hoặc hết hạn)".
 - Không ảnh hưởng bot trả lời chính, chỉ ảnh hưởng memory tổng hợp / vault enrich.
