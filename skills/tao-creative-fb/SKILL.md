@@ -4,9 +4,9 @@ description: Sinh nội dung Facebook cho pickleball30phut.com — Mode 1 (bài 
 license: MIT
 metadata:
   author: Coach PPR — pickleball30phut.com
-  version: 1.0.0
+  version: 1.1.0
   category: social-content
-  tags: [facebook, pickleball, vietnamese, dalle, caption]
+  tags: [facebook, pickleball, vietnamese, dalle, caption, infographic, lane-system]
 ---
 
 # tao-creative-fb — Creative Facebook cho Coach PPR
@@ -45,14 +45,36 @@ Nếu Coach không nói mode → hỏi 1 câu: *"Anh muốn Mode 1 (bài organic
 
 ---
 
+## Chọn LANE ảnh (bắt buộc, trước khi viết prompt ảnh)
+
+Đọc `references/image-prompt-rules.md` rồi chọn **1 trong 3**:
+
+- **LANE A — Infographic** (hook viral + 3–5 ý, AI sinh layout, Coach chèn ảnh thật trên Canva).
+- **LANE B — Lifestyle photo** (storytelling / behind the scenes — KHÔNG dùng AI generate, xuất Photo brief để Coach tự chụp / chọn ảnh sẵn có).
+- **LANE C — B-roll / scene** (paddle, ball, sân, không có face cận cảnh).
+
+**Quy tắc cứng:** AI **không bao giờ** generate face thật của Coach. Nếu Coach yêu cầu "ảnh giống người thật / chất đời / có mặt Coach" → **luôn** chuyển sang LANE B.
+
+Mặc định nếu Coach không nói rõ: chọn LANE theo góc nội dung —
+
+| Góc (`content-angles.md`) | LANE mặc định |
+|---|---|
+| A1 Người bận rộn, A3 Lỗi nhập môn, A2 Ngại ra sân | **A** (infographic checklist / top-tips) |
+| A6 Behind the scenes, A4 Đôi/phối hợp story | **B** (lifestyle photo) |
+| A5 Quà miễn phí, A7 So sánh | **C** (b-roll) hoặc **A** |
+
+Output **phải có dòng `LANE: A | B | C` ngay đầu section ảnh**.
+
+---
+
 ## Mode 1 — Content Free (organic)
 
-> **Bắt buộc:** mọi lần chạy Mode 1 phải xuất **đủ 4 section** dưới đây — Caption, Hashtag, Prompt ảnh (English), Checklist. Thiếu 1 section nào → coi như **fail**, agent **phải tự bổ sung** trước khi kết thúc turn (không đợi user nhắc).
+> **Bắt buộc:** mọi lần chạy Mode 1 phải xuất **đủ 4 section** — Caption, Hashtag, **Image (theo LANE đã chọn)**, Checklist. Thiếu 1 section → coi như **fail**, agent **phải tự bổ sung** trước khi kết thúc turn (không đợi user nhắc).
 
 **Output** theo đúng thứ tự:
 
 ```markdown
-## Mode 1 · [Tên góc ngắn]
+## Mode 1 · [Tên góc ngắn] · LANE [A|B|C]
 
 ### Caption (dán Page)
 [120–400 từ tiếng Việt, đoạn ngắn, có 1 CTA nhẹ tới link quà / landing nếu phù hợp]
@@ -60,24 +82,34 @@ Nếu Coach không nói mode → hỏi 1 câu: *"Anh muốn Mode 1 (bài organic
 ### Hashtag gợi ý (5–8 cái, tiếng Việt / không dấu tùy platform)
 #...
 
-### Prompt ảnh (English — cho OpenAI Images / DALL·E)
-[Một đoạn tiếng Anh duy nhất, tuân references/image-prompt-rules.md]
+### Image — LANE [A|B|C]
+- **LANE A:** một đoạn prompt English bắt đầu bằng `LANE: A` (theo mẫu Lane A trong image-prompt-rules.md). Phải có hook viral tiếng Việt + 3–5 ý + placeholder slot ảnh thật + negative anti-face.
+- **LANE B:** **KHÔNG** xuất prompt DALL·E. Xuất **Photo brief tiếng Việt** (subject / action / mood / ánh sáng / khung / gợi ý ảnh sẵn có trong `public/`).
+- **LANE C:** prompt English bắt đầu `LANE: C`, subject là paddle/ball/sân, không face cận cảnh, kèm anti-AI-look magic phrases.
 
 ### Checklist trước khi đăng
+- [ ] LANE đã khai báo rõ
 - [ ] Không hứa kết quả / không giá ảo
 - [ ] CTA nhẹ, đúng brand voice
+- [ ] Nếu LANE A → Coach đã chuẩn bị ảnh thật để chèn vào Canva
+- [ ] Nếu LANE B → Coach đã chọn / chụp được ảnh thật (không dùng AI face)
 ```
 
 ---
 
 ## Mode 2 — Creative Ads
 
-> **Bắt buộc:** mọi lần chạy Mode 2 phải xuất **đủ 6 section** — Headline, Primary text, Description, CTA button label, Prompt ảnh (English), Lưu ý. Thiếu section → tự bổ sung trước khi kết thúc turn.
+> **Bắt buộc:** mọi lần chạy Mode 2 phải xuất **đủ 6 section** — Headline, Primary text, Description, CTA button label, **Image (theo LANE)**, Lưu ý. Thiếu section → tự bổ sung trước khi kết thúc turn.
+>
+> **Khuyến nghị LANE cho Mode 2 ads:**
+> - **LANE A** (infographic) khi muốn ad dạng checklist / so sánh / "X điều cần biết" — CTR thường cao với mobile feed.
+> - **LANE B** (lifestyle photo có Coach) cho ads tin tưởng / personal brand — Coach phải chuẩn bị ảnh thật, KHÔNG AI face.
+> - **LANE C** (b-roll paddle/sân) cho ads brand awareness, an toàn nhất khi không có ảnh thật.
 
 **Output** (để Coach paste vào Ads Manager — **không** tự chạy ads):
 
 ```markdown
-## Mode 2 · Creative Ads · [Tên góc]
+## Mode 2 · Creative Ads · [Tên góc] · LANE [A|B|C]
 
 ### Headline (≤40 ký tự khuyến nghị)
 ...
@@ -91,12 +123,15 @@ Nếu Coach không nói mode → hỏi 1 câu: *"Anh muốn Mode 1 (bài organic
 ### CTA button label gợi ý
 [Một trong: Tìm hiểu thêm / Đăng ký / Nhận ưu đãi / Liên hệ — chọn 1 phù hợp]
 
-### Prompt ảnh quảng cáo (English)
-[Một đoạn, tuân image-prompt-rules.md — rõ subject, ánh sáng, không text overlay trong ảnh nếu có thể]
+### Image — LANE [A|B|C]
+- **LANE A:** prompt English `LANE: A …` theo mẫu Lane A trong image-prompt-rules.md (hook viral + 3–5 bullet + placeholder ảnh thật + anti-face). Lưu ý ad: tránh text > 20% diện tích ảnh nếu có thể (Meta khuyến nghị, không cấm).
+- **LANE B:** **KHÔNG** prompt AI. Xuất **Photo brief** tiếng Việt để Coach chụp / chọn ảnh thật.
+- **LANE C:** prompt English `LANE: C …`, subject paddle/ball/sân, kèm anti-AI-look magic phrases.
 
 ### Lưu ý
 - Đây là **nháp** — Coach chỉnh sau khi xem Ads Manager preview.
 - Không cam kết CPA/CTR.
+- AI **không** generate face thật Coach. Ảnh có Coach phải là ảnh thật chụp tay.
 ```
 
 ---
@@ -104,7 +139,10 @@ Nếu Coach không nói mode → hỏi 1 câu: *"Anh muốn Mode 1 (bài organic
 ## OpenAI Images / Chat (khi agent có tool)
 
 - **Caption / headline:** model text (gpt-4o-mini hoặc gpt-4o).
-- **Ảnh:** sau khi có prompt English ở trên — gọi Images API (`dall-e-3` hoặc `gpt-image-1` tuỳ dashboard) với prompt đó; hoặc Coach chạy tay trong Playground.
+- **Ảnh:**
+  - **LANE A & C:** gọi Images API (`dall-e-3` hoặc `gpt-image-1`) với prompt English đã sinh; size `1024x1024` (square) hoặc `1024x1792` (vertical, hợp infographic FB feed).
+  - **LANE B:** **không** gọi Images API. Trả Photo brief để Coach chụp / chọn ảnh thật.
+- Trước khi gọi Images API, **kiểm tra prompt** có dòng `LANE: A` hoặc `LANE: C` ở đầu, có negative anti-face, có brand-safety. Thiếu → tự bổ sung.
 
 Agent **không** để lộ API key trong output.
 
