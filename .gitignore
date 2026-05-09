@@ -50,3 +50,10 @@ next-env.d.ts
 # /data/brain-mcp-test.db trong dev). Tránh git stash -u xóa brain.db khi pull code.
 /data/
 !/data/.gitkeep
+
+# AI image API artifacts (response chứa URL hết hạn, body tạm)
+dall-e-response*.json
+gpt-image-*-resp.json
+body.json
+probe*.json
+COMMIT_MSG.tmp

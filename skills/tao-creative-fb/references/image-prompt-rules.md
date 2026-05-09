@@ -1,78 +1,134 @@
 # Quy tắc ảnh & prompt cho post FB — Coach PPR / pickleball30phut.com
 
-> **Insight quan trọng (2026):** DALL·E 3 / `gpt-image-1` **không** sinh được mặt thật của Coach Thuận. Mọi cố ép → ra mặt "AI-look" / hoạt hình / nhựa, độc giả nhận ra ngay và mất tin tưởng.
-> ⇒ **Quy tắc số 1:** AI **không** generate face người Việt cụ thể. Thay vào đó, chia 3 lane bên dưới và để Coach **chèn ảnh thật** ở khâu Canva.
+> **Insight 2026 (đã test thực tế Day 17):**
+> 1. **DALL·E 3 fail typography Tiếng Việt** — sai chính tả nặng, không dùng được cho infographic.
+> 2. **`gpt-image-1`** (model mới của OpenAI) photoreal hơn, ít "AI-look" hơn, typography tốt hơn — **dùng model này** cho LANE C, KHÔNG dùng `dall-e-3`.
+> 3. **Infographic chuyên nghiệp** (như "Third Shot Drop", "AI tự kêu mình", "Tri thức của bạn phải có hình dạng") — đều là **Canva template + ảnh thật + typography manual**, KHÔNG phải AI generate trong 1 cú.
+> 4. AI **không bao giờ** generate face thật của Coach Thuận đẹp như ảnh thật. Mọi cố ép → ra mặt nhựa, độc giả nhận ra ngay.
 
 ---
 
-## 3 LANE bắt buộc chọn 1 trước khi viết prompt
+## 3 LANE bắt buộc chọn 1 trước khi viết output
 
-| LANE | Khi dùng | AI làm gì | Coach làm gì |
-|------|----------|-----------|--------------|
-| **A. Infographic** | Bài viral kiểu "5 câu nói Coach", "3 lỗi nhập môn", checklist, top tips | Sinh **layout + typography Tiếng Việt + brand color + icon vector** (KHÔNG có face người) | Mở Canva, **chèn ảnh thật** Coach vào slot trống / silhouette + đăng |
-| **B. Lifestyle photo (chất đời)** | Bài storytelling, behind the scenes, ảnh Coach + gia đình / sân thật | **KHÔNG generate**. Bot xuất **Photo brief** (gợi ý setup chụp / chọn ảnh từ kho có sẵn) | Tự chụp bằng phone hoặc chọn ảnh thật đã có |
-| **C. B-roll / scene (không có người)** | Cần ảnh minh hoạ: paddle, ball, sân, dụng cụ, cảnh sân từ xa | Sinh ảnh photoreal **không có face cận cảnh** (paddle close-up, ball trên sân, sân nhìn từ trên) | Đăng trực tiếp hoặc làm cover |
+| LANE | Khi dùng | Bot output | Coach làm gì |
+|------|----------|------------|--------------|
+| **A. Canva Spec Sheet** | **Mặc định** cho post viral / checklist / "X điều cần biết" / infographic chuyên nghiệp | **Markdown spec sheet tiếng Việt** (headline exact, 4–5 bullet, brand color, font, slot ảnh, brand element) | Mở Canva → tìm template "Sport Infographic Vertical" → paste headline + bullet + chèn 2–3 ảnh thật → export. **5 phút.** |
+| **B. Lifestyle photo (chất đời)** | Storytelling, behind the scenes, ảnh Coach + gia đình / sân thật | **KHÔNG generate**. Bot xuất **Photo brief tiếng Việt** | Coach tự chụp bằng phone hoặc chọn ảnh sẵn có |
+| **C. B-roll / scene** | Ảnh minh hoạ paddle / ball / sân, không có face cận cảnh | Prompt English cho **`gpt-image-1`** (KHÔNG `dall-e-3`) | Đăng trực tiếp hoặc làm cover |
 
-→ Output prompt **phải bắt đầu bằng dòng** `LANE: A` / `LANE: B` / `LANE: C` để Coach biết chiều xử lý tiếp theo.
+→ Output **phải bắt đầu bằng dòng `LANE: A | B | C`** để Coach biết chiều xử lý tiếp theo.
 
 ---
 
-## LANE A — Infographic prompt (English, cho DALL·E 3 / gpt-image-1)
+## LANE A — Canva Spec Sheet (PRIMARY, dùng cho 80% bài)
 
-### Cấu trúc bắt buộc
+Bot **không** gọi DALL·E. Xuất spec sheet tiếng Việt theo đúng format dưới (Coach copy paste vào Canva):
 
-1. **Hook viral tiếng Việt** (8–14 từ, đặt trong dấu nháy kép trong prompt) — ví dụ: `"5 câu nói Coach giúp bạn tiến bộ mỗi ngày"`.
-2. **3–5 ý chính** (mỗi ý ≤8 từ tiếng Việt, đánh số 1–5).
-3. **Layout style:** `vertical 1024x1024 OR 1024x1792 modern sport infographic, bold sans-serif Vietnamese typography, brand colors red #E11D2C white and navy blue, clean grid, numbered cards 1 to 5, icon vector flat style for each point`.
-4. **Slot ảnh thật:** `leave 3 to 5 empty rounded photo frames (placeholder gray) where real photos of the coach will be inserted later in Canva — DO NOT draw any human face inside these frames`.
-5. **Brand:** `small "PPR PICKLEBALL" wordmark top-right, no other logos`.
-6. **Negative:** `no realistic human face, no anime character, no cartoon mascot, no fake AI person, no watermark, no English-only text, no spelling errors in Vietnamese`.
+### Format bắt buộc
 
-### Mẫu prompt LANE A (paste vào Images API)
+```markdown
+LANE: A — Canva Spec Sheet
 
+## 1. Hook chính (vào Canva làm headline lớn)
+[Hook viral 8–14 từ tiếng Việt, viết HOA, rõ Tiếng Việt có dấu, dùng dấu chấm cảm hoặc hỏi nếu hợp]
+
+## 2. Sub-headline (dòng 2 nhỏ hơn, optional)
+[6–12 từ giải thích / câu hỏi phụ — có thể bỏ qua]
+
+## 3. Bullet ý chính (3–5 ý, mỗi ý ≤ 8 từ + 1 dòng giải thích ngắn ≤ 12 từ)
+1. **[Bullet 1 viết HOA]** — [giải thích 1 dòng]
+2. **[Bullet 2]** — [giải thích]
+3. **[Bullet 3]** — [giải thích]
+4. **[Bullet 4]** — [giải thích]
+5. **[Bullet 5]** — [giải thích]
+
+## 4. Quote box (1 câu chốt — placement giữa hoặc dưới)
+"[Câu chốt 8–18 từ — viết HOA phần nhấn]"
+
+## 5. Brand element (footer)
+- Logo PPR top-right (đã có sẵn trong Canva brand kit)
+- Footer: pickleball30phut.com · Zalo Coach PPR · 0919.117.687
+- Domain hover: nếu post lead thì thêm "Tải lộ trình 30 phút free → link bio"
+
+## 6. Slot ảnh thật (Coach chèn trong Canva)
+- Slot lớn (center hoặc right 50%): [mô tả ảnh — vd: "Coach mid-swing forehand, áo PPR trắng, sân indoor đêm" → dùng `public/coach-action-1.jpg` nếu có]
+- Slot nhỏ 1: [mô tả — vd: "Coach hạ thấp trọng tâm thủ"]
+- Slot nhỏ 2: [mô tả — vd: "Coach giao bóng"]
+- Optional thêm 1–2 slot nếu bullet ≥ 5
+
+## 7. Color & font (paste vào Canva style)
+- Background: dark navy `#0E2A47` hoặc đen `#0B0B0B` (theo brand "Third Shot Drop" / "AI tự kêu mình")
+- Accent: vàng `#F7C400` (highlight số / hook keyword)
+- Brand red: `#E11D2C` (logo PPR + tag số bullet)
+- Text chính: trắng `#FFFFFF`
+- Headline font: Bebas Neue / Anton / Montserrat Black (sans-serif đậm, all caps)
+- Body font: Montserrat / Be Vietnam Pro Medium
+
+## 8. Canva template gợi ý
+- Search Canva: "sport infographic vertical 4:5", "fitness checklist Vietnamese", "tips poster red navy"
+- Aspect ratio: **4:5 (1080x1350)** cho FB feed; hoặc **1:1 (1080x1080)** cho carousel
+- Tham khảo style: ảnh "NÂNG TRÌNH với THIRD SHOT DROP 2026" của Coach (đã có)
+
+## 9. Checklist Canva trước khi export
+- [ ] Tiếng Việt có dấu đầy đủ, không sai chính tả
+- [ ] Logo PPR rõ, không che ảnh chính
+- [ ] Ảnh thật Coach chiếm ≥ 40% diện tích (giống ảnh "Third Shot Drop")
+- [ ] Footer có domain + Zalo
+- [ ] Export PNG 1080x1350 (FB feed) hoặc 1080x1920 (story)
 ```
-LANE: A
-Vertical sport infographic poster 1024x1792, modern Vietnamese pickleball brand style.
-Title at top in bold sans-serif Vietnamese: "5 CÂU NÓI COACH HAY NHẤT GIÚP BẠN TIẾN BỘ MỖI NGÀY".
-Brand colors: red #E11D2C, navy blue, white. Small "PPR PICKLEBALL" wordmark top-right.
-Below title: 5 numbered cards (1 to 5), each with a small flat-vector pickleball icon (paddle, ball, court, target, trophy) and a short Vietnamese phrase under it, placeholder text:
-1. "HẠ THẤP TRỌNG TÂM"
-2. "CẦM VỢT NHẸ TAY"
-3. "GIAO BÓNG THẤP NHANH"
-4. "VỀ TƯ THẾ THỦ NGAY"
-5. "TẬP DINK MỖI BUỔI"
-Between cards leave 3 empty rounded photo frames with light gray placeholder fill — DO NOT draw any human, face, or character inside these frames; they will be replaced with real coach photos in Canva.
-Bottom strip: 4 small icon labels "KỸ THUẬT ĐÚNG · TƯ DUY ĐÚNG · KỶ LUẬT ĐÚNG · KẾT QUẢ SẼ ĐẾN".
-Style: flat clean modern, sharp typography, no realistic human face anywhere, no anime, no cartoon mascot, no watermark, no fake AI person.
-```
+
+### Cách dùng spec này
+
+Coach mở Canva → search template → kéo bullet trong spec vào headline + cards → chèn ảnh thật từ `public/` → export. Total **5 phút**.
 
 ---
 
 ## LANE B — Photo brief (KHÔNG dùng AI generate ảnh)
 
-Bot **không** xuất prompt DALL·E. Thay vào đó xuất **Photo brief tiếng Việt** ngắn để Coach tự chụp / chọn ảnh:
+Bot **không** gọi Images API. Xuất Photo brief tiếng Việt:
 
+```markdown
+LANE: B — Photo brief
+
+### Subject
+Coach Thuận, [áo polo PPR trắng / áo đen Brainmaker / mặc đồ thường], [biểu cảm: tập trung / cười / nghiêm túc]
+
+### Bối cảnh
+[Sân indoor đêm / sân outdoor sáng / nhà / cà phê / bàn làm việc với laptop & phone]
+
+### Action
+[Mid-swing forehand / hạ thấp thủ / cầm phone đọc bot / về nhà ôm con / cầm cà phê]
+
+### Mood
+[Năng lượng / chất đời / ấm áp gia đình / tập trung công việc]
+
+### Ánh sáng
+[Đèn sân ấm vàng buổi tối / nắng tự nhiên ban ngày / đèn cà phê warm tone]
+
+### Khung hình
+[Dọc 4:5 (FB feed) / vuông 1:1 / ngang 16:9 (cover)]
+
+### Tránh
+- Filter làm da quá mịn / beauty AI
+- Background lộn xộn / có người lạ / có brand khác
+- Quần áo không thuộc PPR / Brainmaker
+
+### Gợi ý ảnh có sẵn (kiểm tra public/)
+- public/coach-avatar.png (portrait)
+- [bot tự rà thư mục public/ và đề xuất nếu thấy có ảnh phù hợp]
+
+### Nếu Coach không có ảnh phù hợp
+→ Lên lịch tự shoot **1 buổi 30 phút** với phone (đèn tự nhiên) — không cần studio.
+→ Tạm thay bằng **LANE A (Canva Spec Sheet)** kèm ảnh sẵn có cho bài này.
 ```
-### Photo brief (Coach tự chụp hoặc chọn từ kho ảnh)
-
-- Subject: Coach Thuận (áo polo PPR / áo thể thao trắng), [bối cảnh: sân indoor / về nhà ôm con / cầm paddle...]
-- Action: [mid-swing / đi bộ vào nhà / setup paddle...]
-- Mood: thật, đời thường, không pose cứng
-- Ánh sáng: ánh sáng tự nhiên ban ngày HOẶC đèn sân ấm buổi tối
-- Khung: dọc 4:5 (tối ưu FB feed) hoặc vuông 1:1
-- Tránh: filter làm da quá mịn, beauty AI, background lộn xộn
-- Gợi ý ảnh có sẵn: [tên file trong public/ nếu Coach đã có — ví dụ public/coach-avatar.png]
-```
-
-Lý do: với Coach mặt người Việt cụ thể, AI generate luôn bị **"chất AI"** lộ liễu. Ảnh thật + caption hay = engagement thật.
 
 ---
 
-## LANE C — B-roll / scene prompt (English, cho DALL·E 3)
+## LANE C — B-roll / scene prompt (English, cho `gpt-image-1`)
 
 Subject **không có face cận cảnh**. Cho phép paddle, ball, sân, dụng cụ, hoặc người ở góc xa / silhouette / chụp lưng.
 
-### Mẫu prompt LANE C
+### Mẫu prompt LANE C (paste vào API call)
 
 ```
 LANE: C
@@ -80,22 +136,51 @@ Photorealistic close-up of a white pickleball paddle and yellow pickleball resti
 No human face, no logos, no text overlay, no watermark, no anime, no cartoon, no 3D render, no digital painting.
 ```
 
-### Anti-AI-look magic phrases (thêm cuối mọi prompt LANE C)
+### API call (model BẮT BUỘC = `gpt-image-1`)
 
-`shot on real camera, natural lighting, real material texture, sport documentary photography, no smooth airbrush, no plastic skin, no anime, no cartoon, no 3D render, no digital painting, no fake AI person`
+```bash
+POST https://api.openai.com/v1/images/generations
+{
+  "model": "gpt-image-1",
+  "prompt": "<LANE C prompt>",
+  "size": "1024x1024",
+  "n": 1
+}
+```
+
+Response trả `b64_json` (không phải URL như DALL·E 3) → decode base64 → save PNG.
+
+### Anti-AI-look magic phrases (luôn thêm cuối prompt LANE C)
+
+`shot on real camera, natural lighting, real material texture, sport documentary photography, no smooth airbrush, no plastic skin, no anime, no cartoon, no 3D render, no digital painting, no fake AI person, no Vietnamese text overlay`
 
 ---
 
-## Brand-safety checklist (cho mọi LANE)
+## Vì sao bỏ DALL·E 3 cho Tiếng Việt?
+
+| Vấn đề | DALL·E 3 | `gpt-image-1` |
+|---|---|---|
+| Chính tả Tiếng Việt | **Hỏng nặng** ("DAMI", "VANI", "STZA") | Khá hơn nhưng **vẫn không đủ tin** cho production |
+| Photoreal | "Chất AI" / hoạt hình | Tốt hơn rõ rệt |
+| Reference image | Không support | **Có support** (image input) |
+| Kích thước | 1024x1024 / 1024x1792 / 1792x1024 | Linh hoạt hơn |
+
+**Quy tắc cứng:** Bất cứ ảnh nào cần **typography Tiếng Việt** → LANE A (Canva). Không cố ép bất kỳ AI image model nào.
+
+---
+
+## Brand-safety checklist (mọi LANE)
 
 - [ ] Không có logo Meta / Google / OpenAI / brand môn thể thao khác trong ảnh.
-- [ ] Không sai dụng cụ (pickleball paddle ≠ tennis racket ≠ ping pong paddle ≠ padel racket).
-- [ ] Pickleball: paddle mặt phẳng đặc, ball nhựa lỗ tròn (giống wiffle ball), sân nhỏ hơn tennis.
-- [ ] Tiếng Việt trong ảnh phải có dấu đầy đủ, không sai chính tả.
-- [ ] Nếu LANE A có placeholder ảnh thật → ghi rõ "DO NOT draw any human inside these frames".
+- [ ] Pickleball: paddle mặt phẳng đặc, ball nhựa lỗ tròn (giống wiffle ball), sân nhỏ hơn tennis. Không lẫn racket tennis / cầu lông / padel.
+- [ ] Tiếng Việt trong ảnh phải có dấu đầy đủ, không sai chính tả → bắt buộc dùng LANE A (Canva).
+- [ ] Nếu cần ảnh có Coach → LANE B (ảnh thật) hoặc LANE A (chèn ảnh thật vào Canva).
 
 ---
 
-## Khi nào fallback sang LANE B?
+## Khi nào fallback giữa các LANE?
 
-Nếu Coach yêu cầu ảnh **giống người thật / chất đời / có mặt Coach** → **luôn** chuyển sang LANE B (Photo brief). Đừng cố ép DALL·E.
+- Coach yêu cầu "ảnh giống người thật / chất đời / có mặt Coach" → **LANE B**.
+- Coach muốn post viral / "X điều cần biết" / "5 lỗi phổ biến" → **LANE A**.
+- Coach chỉ cần ảnh minh hoạ paddle / ball / sân không người → **LANE C** với `gpt-image-1`.
+- **Không bao giờ** dùng `dall-e-3` cho tiếng Việt overlay.
