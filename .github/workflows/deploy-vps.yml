@@ -1,13 +1,58 @@
 name: Deploy Landing Page to VPS
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TRẠNG THÁI: TẮT TỰ ĐỘNG (manual trigger only)
+#
+# Lý do tắt (2026-05-09):
+#   - VPS hiện chạy MCP server + Caddy + goClaw + brain.db, KHÔNG host
+#     Next.js landing. Landing đã deploy qua Vercel (deploy-production.yml).
+#   - Secret VPS_SSH_KEY hiện hỏng (libcrypto error). Mỗi push → workflow
+#     fail → spam email. Tắt auto là tốt nhất tới khi thật sự cần.
+#
+# Khi nào BẬT lại trigger push:
+#   1. Đổi block "on:" thành:
+#         on:
+#           push:
+#             branches: [master]
+#             paths:
+#               - "src/**"
+#               - "app/**"
+#               - "public/**"
+#               - "package.json"
+#               - "package-lock.json"
+#               - "next.config.*"
+#               - "Dockerfile"
+#               - "docker-compose*.yml"
+#             paths-ignore:
+#               - "skills/**"
+#               - "context-files/**"
+#               - "vault-ready/**"
+#               - "**/*.md"
+#               - "scripts/**"
+#   2. Tạo SSH keypair mới:
+#         ssh-keygen -t ed25519 -C "github-deploy" -f deploy_key -N ""
+#   3. Đẩy public key lên VPS:
+#         ssh root@VPS "cat >> ~/.ssh/authorized_keys" < deploy_key.pub
+#   4. Paste private key (toàn bộ deploy_key) vào GitHub Settings → Secrets
+#      → Actions → VPS_SSH_KEY (tạo lại nếu cần). Xác nhận VPS_HOST,
+#      VPS_USERNAME, VPS_PORT cũng đúng.
+#   5. Test: vào Actions → "Deploy Landing Page to VPS" → Run workflow.
+#
+# Cách chạy thủ công khi đang TẮT auto:
+#   Actions → Deploy Landing Page to VPS → Run workflow → chọn branch → Run.
+# ─────────────────────────────────────────────────────────────────────────────
+
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
+
+concurrency:
+  group: vps-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -19,10 +64,10 @@ jobs:
           REMOTE_USER: ${{ secrets.VPS_USERNAME }}
           REMOTE_PORT: ${{ secrets.VPS_PORT }}
           TARGET: "/opt/pickleball-landing/"
-          EXCLUDE: "/.git/, /node_modules/, /.env.local"
+          EXCLUDE: "/.git/, /node_modules/, /.env.local, /skills/, /context-files/, /vault-ready/"
 
       - name: Restart Docker on VPS
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
