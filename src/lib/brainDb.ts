@@ -1205,18 +1205,29 @@ const SEPAY_PLACEHOLDER_PRODUCT = "Thanh toán khóa học (SePay)";
 export async function sepayCheckoutInsertPending(params: {
   customerName: string;
   customerPhone: string;
+  customerEmail?: string;
   amount: number;
   invoice: string;
+  productId?: number;
 }): Promise<void> {
   await ensurePg();
-  const { customerName, customerPhone, amount, invoice } = params;
+  const { customerName, customerPhone, customerEmail, amount, invoice } = params;
+  const email = customerEmail?.trim() || null;
+  const overrideProductId =
+    params.productId != null && Number.isInteger(params.productId) && params.productId > 0
+      ? params.productId
+      : null;
 
   if (usePostgres) {
     const sql = getPg()!;
     const envId = Number(process.env.SEPAY_PRODUCT_ID);
     await sql.begin(async (tx) => {
       let productId: number;
-      if (Number.isInteger(envId) && envId > 0) {
+      if (overrideProductId) {
+        const [p] = await tx`SELECT id FROM products WHERE id = ${overrideProductId}`;
+        if (!p) throw new Error("PRODUCT_NOT_FOUND");
+        productId = (p as { id: number }).id;
+      } else if (Number.isInteger(envId) && envId > 0) {
         const [p] = await tx`SELECT id FROM products WHERE id = ${envId}`;
         if (!p) throw new Error("PRODUCT_NOT_FOUND");
         productId = (p as { id: number }).id;
@@ -1237,10 +1248,10 @@ export async function sepayCheckoutInsertPending(params: {
       let customerId: number;
       if (existing) {
         customerId = (existing as { id: number }).id;
-        await tx`UPDATE customers SET name = ${customerName} WHERE id = ${customerId}`;
+        await tx`UPDATE customers SET name = ${customerName}, email = COALESCE(${email}, email) WHERE id = ${customerId}`;
       } else {
         const [ins] = await tx`
-          INSERT INTO customers (name, phone) VALUES (${customerName}, ${customerPhone})
+          INSERT INTO customers (name, phone, email) VALUES (${customerName}, ${customerPhone}, ${email})
           RETURNING id
         `;
         customerId = (ins as { id: number }).id;
@@ -1257,7 +1268,13 @@ export async function sepayCheckoutInsertPending(params: {
   db.transaction(() => {
     const envId = Number(process.env.SEPAY_PRODUCT_ID);
     let productId: number;
-    if (Number.isInteger(envId) && envId > 0) {
+    if (overrideProductId) {
+      const row = db.prepare("SELECT id FROM products WHERE id = ?").get(overrideProductId) as
+        | { id: number }
+        | undefined;
+      if (!row) throw new Error("PRODUCT_NOT_FOUND");
+      productId = row.id;
+    } else if (Number.isInteger(envId) && envId > 0) {
       const row = db.prepare("SELECT id FROM products WHERE id = ?").get(envId) as { id: number } | undefined;
       if (!row) throw new Error("PRODUCT_NOT_FOUND");
       productId = row.id;
@@ -1279,10 +1296,16 @@ export async function sepayCheckoutInsertPending(params: {
       | undefined;
     let customerId: number;
     if (existing) {
-      db.prepare("UPDATE customers SET name = ? WHERE id = ?").run(customerName, existing.id);
+      db.prepare("UPDATE customers SET name = ?, email = COALESCE(?, email) WHERE id = ?").run(
+        customerName,
+        email,
+        existing.id,
+      );
       customerId = existing.id;
     } else {
-      const inserted = db.prepare("INSERT INTO customers (name, phone) VALUES (?, ?)").run(customerName, customerPhone);
+      const inserted = db
+        .prepare("INSERT INTO customers (name, phone, email) VALUES (?, ?, ?)")
+        .run(customerName, customerPhone, email);
       customerId = Number(inserted.lastInsertRowid);
     }
     db.prepare(

@@ -6,8 +6,16 @@
 
 | ID | Tên | Giá | Còn | Mô tả |
 |---|---|---|---|---|
-| 1 | Combo Kỹ năng thực chiến | 399.000đ | 999 | Coach 1:1 tại sân, book lịch Zalo trực tiếp. |
-| 2 | Học online - Nhập môn tốc độ | 99.000đ | 686 | Học online trước, trang bị kiến thức nền tảng |
+| 1 | Combo Kỹ năng thực chiến | 4.999.000đ | 999 | Coach 1:1 tại sân — **10 buổi**, book lịch Zalo trực tiếp. |
+| 2 | Học online - Nhập môn tốc độ | 499.000đ | 686 | Học online trước, trang bị kiến thức nền tảng |
+
+### Bảng giá đồng bộ (tham chiếu nhanh)
+
+| Bậc | Sản phẩm | Giá |
+|-----|----------|-----|
+| Entry | Cẩm nang thực chiến Pickleball cho NewBie (PDF, Day 19) | 68.000đ |
+| Core online | Nhập môn tốc độ (ID 2) | 499.000đ / 365 ngày |
+| High ticket | Combo 1:1 tại sân — **10 buổi** (ID 1) | **4.999.000đ** (~499k/buổi) |
 
 ## Quà tặng (lead magnet)
 

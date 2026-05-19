@@ -3,6 +3,7 @@ import {
   sepayIpnMarkPaid,
   sepayProcessBankIncomeWebhook,
 } from "@/lib/brainDb";
+import { fulfillCamNangOrderByInvoice } from "@/lib/fulfillDigitalOrder";
 
 export const runtime = "nodejs";
 
@@ -96,6 +97,15 @@ export async function POST(request: Request) {
       if (!r.handled) {
         return NextResponse.json({ success: true, ignored: true });
       }
+      if (r.matched && !r.duplicate) {
+        const text = [body.code, body.content, body.description].map((s) => s ?? "").join(" ");
+        const invMatch = text.match(/PB-\d+/);
+        if (invMatch) {
+          void fulfillCamNangOrderByInvoice(invMatch[0]).catch((err) => {
+            console.error("[SePay bank IPN] fulfillCamNang failed", invMatch[0], err);
+          });
+        }
+      }
       return NextResponse.json({ success: true, bank: true, matched: r.matched, duplicate: r.duplicate });
     }
 
@@ -117,6 +127,12 @@ export async function POST(request: Request) {
     const updated = await sepayIpnMarkPaid(invoice);
     if (!updated.matched) {
       return NextResponse.json({ success: true, warning: "order_not_found" });
+    }
+
+    if (!updated.alreadyPaid) {
+      void fulfillCamNangOrderByInvoice(invoice).catch((err) => {
+        console.error("[SePay IPN] fulfillCamNang failed", invoice, err);
+      });
     }
 
     return NextResponse.json({ success: true });

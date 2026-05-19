@@ -17,7 +17,10 @@
 "Đúng là kỹ năng cần ra sân luyện, nhưng kiến thức nền (biết luật, biết đứng đâu, biết cách di chuyển) thì học online trước sẽ giúp Anh/Chị tiết kiệm 50% thời gian bỡ ngỡ trên sân. Anh/Chị học xong lý thuyết, ra sân thực hành là chuẩn bài luôn ạ."
 
 **Q4: Khóa học giá bao nhiêu?**
-"Dạ, khóa học **99.000đ / 365 ngày** — chỉ bằng một ly cà phê Starbucks thôi ạ. Nhưng trước hết, Anh/Chị có thể đăng ký **Học Thử Miễn Phí** buổi đầu để xem cách dạy của Coach có phù hợp với mình không nhé!"
+"Dạ, khóa **Học online — Nhập môn tốc độ** hiện **499.000đ / 365 ngày** ạ — gói học online có lộ trình, checklist và bài tập thực chiến. Trước hết, Anh/Chị có thể đăng ký **Học thử miễn phí** buổi đầu hoặc mua **Cẩm nang NewBie (68k)** để thử cách dạy của Coach trước khi vào khoá nhé!"
+
+**Q4b: Combo 1:1 tại sân giá bao nhiêu?**
+"Dạ, **Combo Kỹ năng thực chiến** — Coach 1:1 tại sân **10 buổi** hiện **4.999.000đ** ạ (book lịch qua Zalo Coach). Anh/Chị muốn học online trước thì khoá **499k/365 ngày**; muốn sửa tay trực tiếp trên sân thì combo 10 buổi là lựa chọn cao nhất ạ."
 
 **Q5: Coach Thuận Hóa có bằng cấp gì không?**
 "Dạ có ạ, Coach Thuận Hóa đạt chứng chỉ chuẩn **PPR Level 2** — đây là bằng cấp huấn luyện Pickleball quốc tế uy tín nhất hiện nay. Coach luôn làm việc với phương châm 'Nói được làm được' nên Anh/Chị hoàn toàn yên tâm về chuyên môn."
@@ -40,7 +43,7 @@
 ---
 
 ## 3. Câu Chốt Đơn (Closing)
-"Với 99k mà đổi lại sự tự tin trên sân và tránh được những chấn thương không đáng có do sai tư thế, em thấy đây là khoản đầu tư hời nhất cho sức khỏe đấy ạ. Anh/Chị muốn nhận link thanh toán gói **365 ngày** luôn hay muốn đăng ký học thử trước ạ?"
+"Với **499k** cho cả năm học online — đổi lại sự tự tin trên sân và tránh luyện sai tư thế lâu dài — em thấy đây là khoản đầu tư xứng với lộ trình có Coach đứng sân dẫn dắt ạ. Anh/Chị muốn nhận link thanh toán gói **365 ngày** luôn, hay đăng ký học thử / cẩm nang 68k trước ạ?"
 
 ---
 

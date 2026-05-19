@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "Khóa học giá bao nhiêu?",
-    a: "Dạ, khóa học 99.000đ có thời hạn 365 ngày ạ — chỉ bằng một ly cà phê Starbucks thôi. Nhưng trước hết, Anh/Chị có thể đăng ký Học Thử Miễn Phí buổi đầu để xem cách dạy của Coach có phù hợp với mình không nhé!"
+    a: "Dạ, khóa **Học online — Nhập môn tốc độ** hiện **499.000đ / 365 ngày** ạ — gói học online có lộ trình, checklist và bài tập thực chiến. Trước hết, Anh/Chị có thể đăng ký **Học thử miễn phí** buổi đầu hoặc mua **Cẩm nang NewBie (68k)** để thử cách dạy của Coach trước khi vào khoá nhé!"
   },
   {
     q: "Coach Thuận Hóa có bằng cấp gì không?",
@@ -67,7 +67,10 @@ function replyForFreeText(raw: string): string | null {
   const n = normalizeVi(raw.trim());
   if (!n) return null;
 
-  if (/(gia|bao nhieu|tien|dong hoc|hoc phi|99|99000)/.test(n)) {
+  if (/(combo|1:1|mot ke|một kè|10 buoi|10 buổi|tai san|tại sân|4999|4999000)/.test(n)) {
+    return "Dạ, **Combo Kỹ năng thực chiến** — Coach 1:1 tại sân **10 buổi** hiện **4.999.000đ** ạ (book lịch qua Zalo Coach). Nếu anh/chị mới, em gợi ý thử **Cẩm nang NewBie (68k)** hoặc **khoá online Nhập môn tốc độ (499k/365 ngày)** trước khi vào combo nhé!";
+  }
+  if (/(gia|bao nhieu|tien|dong hoc|hoc phi|499|499000|99000|99k|68k|68000)/.test(n)) {
     return FAQS[3].a;
   }
   if (/(phu hop|hop voi|co nen|minh co|voi minh|co hoc duoc|co cho)/.test(n)) {
