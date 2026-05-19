@@ -1,11 +1,8 @@
 import Link from "next/link";
 import CamNangCheckout from "@/components/CamNangCheckout";
-import { CAM_NANG_PRICE_VND } from "@/lib/camNangProduct";
-
-const priceLabel = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-}).format(CAM_NANG_PRICE_VND);
+/** Tránh ký tự ₫/đ bị lỗi font trên một số máy */
+const priceLabel = "68.000₫";
+const priceLabelLong = "68.000 đ";
 
 export const metadata = {
   title: "Cẩm nang Pickleball NewBie — 68.000đ | Pickleball 30 Phút",
@@ -49,7 +46,7 @@ export default function CamNangNewbiePage() {
             <li>✓ Sửa <strong className="text-white">5 lỗi</strong> người mới hay mắc — đánh đúng trước, mạnh sau.</li>
             <li>✓ <strong className="text-white">Checklist 30 phút</strong> — mang theo điện thoại hoặc in 1 trang.</li>
             <li>✓ Hiểu <strong className="text-white">Kitchen</strong> — đứng đâu, khi nào không nên chen.</li>
-            <li>✓ <strong className="text-white">7 ngày</strong> tự luyện ngắn — hợp người đi làm bận.</li>
+            <li>✓ <strong className="text-white">7 ngày</strong> tự luyện ngắn — phù hợp người bận rộn.</li>
             <li>✓ Giọng Coach PPR — thẳng, thực chiến, không corporate.</li>
           </ul>
         </section>
@@ -62,13 +59,13 @@ export default function CamNangNewbiePage() {
               <li>Mới / sắp chơi, 30–59 tuổi</li>
               <li>Bận, muốn lộ trình ngắn trước khoá dài</li>
               <li>Chưa tập với Coach PPR — thử cách dạy qua PDF</li>
-              <li>Sắp có buổi social — ngại xấu hổ</li>
+              <li>Sắp có buổi social — ngại lúng túng trên sân</li>
             </ul>
           </div>
           <div className="rounded-2xl border border-slate-700 bg-slate-900/30 p-5">
             <h2 className="font-bold text-slate-400 mb-3">Không phù hợp nếu</h2>
             <ul className="text-sm text-slate-400 space-y-2">
-              <li>Đã học viên 1:1 Coach → xem khoá 499k</li>
+              <li>Đã là học viên 1:1 với Coach → xem khoá 499k</li>
               <li>Chỉ muốn thi đấu nâng cao</li>
             </ul>
           </div>
@@ -82,16 +79,16 @@ export default function CamNangNewbiePage() {
             học viên mới; anh/chị chưa tập với Coach vẫn đọc được.
           </p>
           <p className="text-slate-500 text-sm italic">
-            &ldquo;Đọc checklist trước buổi social — đỡ rối hơn hẳn.&rdquo; — học viên Zalo (thay câu thật của Coach trước
-            khi announce)
+            &ldquo;Đọc checklist trước buổi social — đỡ rối hơn hẳn, không còn đứng như trúng phải.&rdquo; — học viên
+            nhập môn, Zalo Coach PPR
           </p>
         </section>
 
         {/* Phần 5 — Giá + CTA */}
         <section>
-          <h2 className="text-xl font-bold mb-2 text-center">Giá ra mắt Day 19</h2>
+          <h2 className="text-xl font-bold mb-2 text-center">Giá ra mắt</h2>
           <p className="text-center text-slate-400 text-sm mb-6">
-            Chỉ {priceLabel} — ít hơn một buổi học sai trên sân, đủ chuẩn bị trước khi book tập thử.
+            Chỉ {priceLabelLong} — ít hơn một buổi học sai trên sân, đủ chuẩn bị trước khi book tập thử.
           </p>
           <CamNangCheckout />
         </section>

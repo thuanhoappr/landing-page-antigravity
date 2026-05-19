@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { CAM_NANG_PRICE_VND } from "@/lib/camNangProduct";
-
 type CheckoutResponse = {
   endpoint: string;
   fields: Record<string, string>;
@@ -68,10 +66,7 @@ export default function CamNangCheckout() {
     }
   };
 
-  const priceLabel = new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(CAM_NANG_PRICE_VND);
+  const priceLabel = "68.000₫";
 
   const inputClass =
     "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none focus:border-brand";

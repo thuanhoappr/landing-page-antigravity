@@ -94,6 +94,27 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     console.error("[SePay checkout] DB error", e);
+    const msg = e instanceof Error ? e.message : String(e);
+    const pgCode =
+      e && typeof e === "object" && "code" in e ? String((e as { code: string }).code) : "";
+    if (pgCode === "23505" || /unique|duplicate/i.test(msg)) {
+      return NextResponse.json(
+        {
+          error:
+            "Email hoặc số điện thoại đã có trong hệ thống với thông tin khác. Dùng email/SĐT khác hoặc nhắn Zalo Coach 0919.117.687.",
+        },
+        { status: 409 },
+      );
+    }
+    if (msg === "PRODUCT_NOT_FOUND") {
+      return NextResponse.json(
+        {
+          error:
+            "Chưa tìm thấy sản phẩm 68k trên server. Kiểm tra /admin và biến CAM_NANG_PRODUCT_ID trên Vercel.",
+        },
+        { status: 500 },
+      );
+    }
     return NextResponse.json({ error: "Không ghi được đơn hàng. Thử lại sau." }, { status: 500 });
   }
 }

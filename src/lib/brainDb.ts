@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import postgres from "postgres";
+import postgres, { type TransactionSql } from "postgres";
 
 export type ProductRow = {
   id: number;
@@ -1202,6 +1202,150 @@ export async function deleteOrderById(id: number): Promise<boolean> {
 
 const SEPAY_PLACEHOLDER_PRODUCT = "Thanh toán khóa học (SePay)";
 
+const CAM_NANG_PRODUCT_NAME_LIKE = "%cẩm nang%";
+
+async function resolveCheckoutProductIdPg(
+  tx: TransactionSql,
+  overrideProductId: number | null,
+  envId: number,
+): Promise<number> {
+  const tryIds = [overrideProductId, Number.isInteger(envId) && envId > 0 ? envId : null].filter(
+    (id): id is number => id != null && id > 0,
+  );
+  for (const id of tryIds) {
+    const [p] = await tx`SELECT id FROM products WHERE id = ${id}`;
+    if (p) return (p as { id: number }).id;
+  }
+  const [byName] = await tx`
+    SELECT id FROM products
+    WHERE name ILIKE ${CAM_NANG_PRODUCT_NAME_LIKE}
+       OR name ILIKE '%cam nang%'
+       OR name ILIKE '%newbie%'
+    ORDER BY id DESC
+    LIMIT 1
+  `;
+  if (byName) return (byName as { id: number }).id;
+
+  const rows = await tx`SELECT id FROM products ORDER BY id ASC LIMIT 1`;
+  if (rows.length) return (rows[0] as { id: number }).id;
+
+  const [ins] = await tx`
+    INSERT INTO products (name, price, description, quantity_remaining)
+    VALUES (${SEPAY_PLACEHOLDER_PRODUCT}, 0, ${"Đơn tạo từ trang thanh-toan / SePay"}, 999999)
+    RETURNING id
+  `;
+  return (ins as { id: number }).id;
+}
+
+async function upsertCheckoutCustomerPg(
+  tx: TransactionSql,
+  customerName: string,
+  customerPhone: string,
+  email: string | null,
+): Promise<number> {
+  const phone = customerPhone.trim();
+  const [byPhone] = await tx`SELECT id FROM customers WHERE phone = ${phone}`;
+  if (byPhone) {
+    const customerId = (byPhone as { id: number }).id;
+    await tx`UPDATE customers SET name = ${customerName} WHERE id = ${customerId}`;
+    if (email) {
+      const [conflict] = await tx`
+        SELECT id FROM customers WHERE email = ${email} AND id <> ${customerId}
+      `;
+      if (!conflict) {
+        await tx`UPDATE customers SET email = ${email} WHERE id = ${customerId}`;
+      }
+    }
+    return customerId;
+  }
+
+  if (email) {
+    const [byEmail] = await tx`SELECT id, phone FROM customers WHERE email = ${email}`;
+    if (byEmail) {
+      const customerId = (byEmail as { id: number }).id;
+      await tx`UPDATE customers SET name = ${customerName} WHERE id = ${customerId}`;
+      if (!(byEmail as { phone: string | null }).phone) {
+        await tx`UPDATE customers SET phone = ${phone} WHERE id = ${customerId}`;
+      }
+      return customerId;
+    }
+  }
+
+  const [ins] = await tx`
+    INSERT INTO customers (name, phone, email) VALUES (${customerName}, ${phone}, ${email})
+    RETURNING id
+  `;
+  return (ins as { id: number }).id;
+}
+
+function resolveCheckoutProductIdSqlite(
+  db: Database.Database,
+  overrideProductId: number | null,
+  envId: number,
+): number {
+  const tryIds = [overrideProductId, Number.isInteger(envId) && envId > 0 ? envId : null].filter(
+    (id): id is number => id != null && id > 0,
+  );
+  for (const id of tryIds) {
+    const row = db.prepare("SELECT id FROM products WHERE id = ?").get(id) as { id: number } | undefined;
+    if (row) return row.id;
+  }
+  const byName = db
+    .prepare(
+      `SELECT id FROM products
+       WHERE lower(name) LIKE '%cẩm nang%' OR lower(name) LIKE '%cam nang%' OR lower(name) LIKE '%newbie%'
+       ORDER BY id DESC LIMIT 1`,
+    )
+    .get() as { id: number } | undefined;
+  if (byName) return byName.id;
+
+  const first = db.prepare("SELECT id FROM products ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
+  if (first) return first.id;
+
+  const result = db
+    .prepare("INSERT INTO products (name, price, description, quantity_remaining) VALUES (?, 0, ?, 999999)")
+    .run(SEPAY_PLACEHOLDER_PRODUCT, "Đơn tạo từ trang thanh-toan / SePay");
+  return Number(result.lastInsertRowid);
+}
+
+function upsertCheckoutCustomerSqlite(
+  db: Database.Database,
+  customerName: string,
+  customerPhone: string,
+  email: string | null,
+): number {
+  const phone = customerPhone.trim();
+  const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(phone) as { id: number } | undefined;
+  if (existing) {
+    db.prepare("UPDATE customers SET name = ? WHERE id = ?").run(customerName, existing.id);
+    if (email) {
+      const conflict = db
+        .prepare("SELECT id FROM customers WHERE email = ? AND id <> ?")
+        .get(email, existing.id) as { id: number } | undefined;
+      if (!conflict) {
+        db.prepare("UPDATE customers SET email = ? WHERE id = ?").run(email, existing.id);
+      }
+    }
+    return existing.id;
+  }
+
+  if (email) {
+    const byEmail = db.prepare("SELECT id, phone FROM customers WHERE email = ?").get(email) as
+      | { id: number; phone: string | null }
+      | undefined;
+    if (byEmail) {
+      db.prepare("UPDATE customers SET name = ? WHERE id = ?").run(customerName, byEmail.id);
+      if (!byEmail.phone) {
+        db.prepare("UPDATE customers SET phone = ? WHERE id = ?").run(phone, byEmail.id);
+      }
+      return byEmail.id;
+    }
+  }
+
+  const inserted = db.prepare("INSERT INTO customers (name, phone, email) VALUES (?, ?, ?)").run(customerName, phone, email);
+  return Number(inserted.lastInsertRowid);
+}
+
 export async function sepayCheckoutInsertPending(params: {
   customerName: string;
   customerPhone: string;
@@ -1222,40 +1366,8 @@ export async function sepayCheckoutInsertPending(params: {
     const sql = getPg()!;
     const envId = Number(process.env.SEPAY_PRODUCT_ID);
     await sql.begin(async (tx) => {
-      let productId: number;
-      if (overrideProductId) {
-        const [p] = await tx`SELECT id FROM products WHERE id = ${overrideProductId}`;
-        if (!p) throw new Error("PRODUCT_NOT_FOUND");
-        productId = (p as { id: number }).id;
-      } else if (Number.isInteger(envId) && envId > 0) {
-        const [p] = await tx`SELECT id FROM products WHERE id = ${envId}`;
-        if (!p) throw new Error("PRODUCT_NOT_FOUND");
-        productId = (p as { id: number }).id;
-      } else {
-        const rows = await tx`SELECT id FROM products ORDER BY id ASC LIMIT 1`;
-        if (rows.length) {
-          productId = (rows[0] as { id: number }).id;
-        } else {
-          const [ins] = await tx`
-            INSERT INTO products (name, price, description, quantity_remaining)
-            VALUES (${SEPAY_PLACEHOLDER_PRODUCT}, 0, ${"Đơn tạo từ trang thanh-toan / SePay"}, 999999)
-            RETURNING id
-          `;
-          productId = (ins as { id: number }).id;
-        }
-      }
-      const [existing] = await tx`SELECT id FROM customers WHERE phone = ${customerPhone}`;
-      let customerId: number;
-      if (existing) {
-        customerId = (existing as { id: number }).id;
-        await tx`UPDATE customers SET name = ${customerName}, email = COALESCE(${email}, email) WHERE id = ${customerId}`;
-      } else {
-        const [ins] = await tx`
-          INSERT INTO customers (name, phone, email) VALUES (${customerName}, ${customerPhone}, ${email})
-          RETURNING id
-        `;
-        customerId = (ins as { id: number }).id;
-      }
+      const productId = await resolveCheckoutProductIdPg(tx, overrideProductId, envId);
+      const customerId = await upsertCheckoutCustomerPg(tx, customerName, customerPhone, email);
       await tx`
         INSERT INTO orders (customer_id, product_id, quantity, amount, status, sepay_invoice)
         VALUES (${customerId}, ${productId}, 1, ${amount}, 'pending', ${invoice})
@@ -1267,47 +1379,8 @@ export async function sepayCheckoutInsertPending(params: {
   const db = getSqliteOrThrow();
   db.transaction(() => {
     const envId = Number(process.env.SEPAY_PRODUCT_ID);
-    let productId: number;
-    if (overrideProductId) {
-      const row = db.prepare("SELECT id FROM products WHERE id = ?").get(overrideProductId) as
-        | { id: number }
-        | undefined;
-      if (!row) throw new Error("PRODUCT_NOT_FOUND");
-      productId = row.id;
-    } else if (Number.isInteger(envId) && envId > 0) {
-      const row = db.prepare("SELECT id FROM products WHERE id = ?").get(envId) as { id: number } | undefined;
-      if (!row) throw new Error("PRODUCT_NOT_FOUND");
-      productId = row.id;
-    } else {
-      const first = db.prepare("SELECT id FROM products ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
-      if (first) {
-        productId = first.id;
-      } else {
-        const result = db
-          .prepare(
-            "INSERT INTO products (name, price, description, quantity_remaining) VALUES (?, 0, ?, 999999)",
-          )
-          .run(SEPAY_PLACEHOLDER_PRODUCT, "Đơn tạo từ trang thanh-toan / SePay");
-        productId = Number(result.lastInsertRowid);
-      }
-    }
-    const existing = db.prepare("SELECT id FROM customers WHERE phone = ?").get(customerPhone) as
-      | { id: number }
-      | undefined;
-    let customerId: number;
-    if (existing) {
-      db.prepare("UPDATE customers SET name = ?, email = COALESCE(?, email) WHERE id = ?").run(
-        customerName,
-        email,
-        existing.id,
-      );
-      customerId = existing.id;
-    } else {
-      const inserted = db
-        .prepare("INSERT INTO customers (name, phone, email) VALUES (?, ?, ?)")
-        .run(customerName, customerPhone, email);
-      customerId = Number(inserted.lastInsertRowid);
-    }
+    const productId = resolveCheckoutProductIdSqlite(db, overrideProductId, envId);
+    const customerId = upsertCheckoutCustomerSqlite(db, customerName, customerPhone, email);
     db.prepare(
       "INSERT INTO orders (customer_id, product_id, quantity, amount, status, sepay_invoice) VALUES (?, ?, 1, ?, 'pending', ?)",
     ).run(customerId, productId, amount, invoice);
