@@ -58,7 +58,9 @@ function ThankYouDefault() {
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const invoice = searchParams.get("invoice")?.trim() || "";
-  const isCamNang = searchParams.get("product") === "cam-nang" && invoice.length > 0;
+  /** Đơn SePay luôn có mã PB-…; form lead /thank-you không có invoice */
+  const isCamNang =
+    invoice.startsWith("PB-") || searchParams.get("product") === "cam-nang";
 
   return (
     <main className="min-h-screen bg-darker flex items-center justify-center p-4">
