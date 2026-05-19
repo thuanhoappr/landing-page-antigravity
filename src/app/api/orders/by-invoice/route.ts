@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrderViewBySepayInvoice } from "@/lib/brainDb";
-import { CAM_NANG_DOWNLOAD_PATH, isCamNangOrder } from "@/lib/camNangProduct";
+import { getCamNangDownloadUrl, isCamNangOrder } from "@/lib/camNangProduct";
 import { getBaseUrl } from "@/lib/sepay";
 
 export const runtime = "nodejs";
@@ -17,8 +17,7 @@ export async function GET(request: Request) {
   }
 
   const isCamNang = isCamNangOrder(order.product_id, order.product_name);
-  const downloadUrl =
-    order.status === "paid" && isCamNang ? `${getBaseUrl()}${CAM_NANG_DOWNLOAD_PATH}` : null;
+  const downloadUrl = isCamNang ? `${getBaseUrl()}${getCamNangDownloadUrl(invoice)}` : null;
 
   return NextResponse.json({
     found: true,

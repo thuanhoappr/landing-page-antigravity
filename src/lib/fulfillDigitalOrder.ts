@@ -1,5 +1,5 @@
 import { getCustomerEmailById, getOrderViewBySepayInvoice, type OrderView } from "@/lib/brainDb";
-import { CAM_NANG_DOWNLOAD_PATH, isCamNangOrder } from "@/lib/camNangProduct";
+import { getCamNangDownloadUrl, isCamNangOrder } from "@/lib/camNangProduct";
 import { getBaseUrl } from "@/lib/sepay";
 import { sendEmail } from "@/lib/resend";
 
@@ -49,7 +49,7 @@ export async function fulfillCamNangOrderByInvoice(invoice: string): Promise<{
     return { sent: false, reason: "no_customer_email" };
   }
 
-  const downloadUrl = `${getBaseUrl()}${CAM_NANG_DOWNLOAD_PATH}`;
+  const downloadUrl = `${getBaseUrl()}${getCamNangDownloadUrl(invoice)}`;
   const result = await sendEmail({
     to: normalizeEmail(to),
     subject: `Tải Cẩm nang Pickleball NewBie — đơn #${order.id}`,
@@ -62,6 +62,6 @@ export async function fulfillCamNangOrderByInvoice(invoice: string): Promise<{
   return { sent: result.sent, reason: result.reason };
 }
 
-export function getCamNangDownloadUrl(): string {
-  return `${getBaseUrl()}${CAM_NANG_DOWNLOAD_PATH}`;
+export function getCamNangDownloadUrlForEmail(invoice: string): string {
+  return `${getBaseUrl()}${getCamNangDownloadUrl(invoice)}`;
 }
